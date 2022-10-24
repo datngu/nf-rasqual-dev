@@ -41,7 +41,7 @@ params.eqtl_window     = 250000
 
 // pipeline options
 params.atac_qtl          = true
-params.eqtl_qtl          = true
+params.eqtl_qtl          = false
 
 
 log.info """\
@@ -79,23 +79,26 @@ workflow {
     // channel general processing
     chrom_list_ch = channel.from(params.chrom)
     //chrom_list_ch.collect().toList().view()
+    VCF_filtering(params.genotype)
+
+
     // ATAC QTL
     if( params.atac_qtl ){
         atac_bam_ch = channel.fromPath( params.atac_bam, checkIfExists: true )
-        ATAC_BAM_rename(params.meta, atac_bam_ch.collect())
-        ATAC_ADD_AS_vcf(params.genotype, ATAC_BAM_rename.out)
+        //ATAC_BAM_rename(params.meta, atac_bam_ch.collect())
+        //ATAC_ADD_AS_vcf(params.genotype, ATAC_BAM_rename.out)
 
-        ATAC_FILTERING_expression(params.atac_count)
-        ATAC_PROCESS_covariates(params.meta, ATAC_FILTERING_expression.out, params.genotype)
-        ATAC_SPLIT_chromosome(chrom_list_ch, ATAC_ADD_AS_vcf.out, ATAC_FILTERING_expression.out )
-        ATAC_PREPROCESS_rasqual(chrom_list_ch, params.meta, ATAC_SPLIT_chromosome.out.collect(), params.genome)
+        //ATAC_FILTERING_expression(params.atac_count)
+        //ATAC_PROCESS_covariates(params.meta, ATAC_FILTERING_expression.out, params.genotype)
+        //ATAC_SPLIT_chromosome(chrom_list_ch, ATAC_ADD_AS_vcf.out, ATAC_FILTERING_expression.out )
+        //ATAC_PREPROCESS_rasqual(chrom_list_ch, params.meta, ATAC_SPLIT_chromosome.out.collect(), params.genome)
 
-        ATAC_RUN_rasqual(chrom_list_ch, ATAC_PREPROCESS_rasqual.out.collect(), ATAC_SPLIT_chromosome.out.collect(), ATAC_PROCESS_covariates.out)
-        ATAC_RUN_rasqual_permutation(chrom_list_ch, ATAC_PREPROCESS_rasqual.out.collect(), ATAC_SPLIT_chromosome.out.collect(), ATAC_PROCESS_covariates.out)
+        //ATAC_RUN_rasqual(chrom_list_ch, ATAC_PREPROCESS_rasqual.out.collect(), ATAC_SPLIT_chromosome.out.collect(), ATAC_PROCESS_covariates.out)
+        //ATAC_RUN_rasqual_permutation(chrom_list_ch, ATAC_PREPROCESS_rasqual.out.collect(), ATAC_SPLIT_chromosome.out.collect(), ATAC_PROCESS_covariates.out)
 
-        ATAC_MERGE_rasqual(chrom_list_ch.max(), ATAC_RUN_rasqual.out.collect())
-        ATAC_MERGE_rasqual_permutation(chrom_list_ch.max(), ATAC_RUN_rasqual_permutation.out.collect())
-        ATAC_COMPUTE_rasqual_emperical_pvalues(ATAC_MERGE_rasqual.out.collect(), ATAC_MERGE_rasqual_permutation.out.collect())
+        //ATAC_MERGE_rasqual(chrom_list_ch.max(), ATAC_RUN_rasqual.out.collect())
+        //ATAC_MERGE_rasqual_permutation(chrom_list_ch.max(), ATAC_RUN_rasqual_permutation.out.collect())
+        //ATAC_COMPUTE_rasqual_emperical_pvalues(ATAC_MERGE_rasqual.out.collect(), ATAC_MERGE_rasqual_permutation.out.collect())
     }
 
     if( params.eqtl_qtl ){
@@ -116,6 +119,41 @@ workflow {
         RNA_COMPUTE_rasqual_emperical_pvalues(RNA_MERGE_rasqual.out.collect(), RNA_MERGE_rasqual_permutation.out.collect())
     }
 }
+
+
+// vcf filtering
+
+// GENOTYPE PROCESSING
+process VCF_filtering { 
+    
+    publishDir "${params.trace_dir}/vcf_filtering", mode: 'symlink', overwrite: true
+    container 'ndatth/rasqual:v0.0.0'
+    memory '8 GB'
+    
+    input:
+    path in_vcf
+    path meta
+ 
+    output:
+    path("genotype_filtered.vcf.gz")
+ 
+    script:
+    """
+    #"in_vcf"=tcel.vcf.gz
+    #meta=/sigma4/projects/nf-circall-qtl/data/meta.csv
+    plink --vcf ${in_vcf} --make-bed --out genotype_raw --memory 8000
+    plink --bfile genotype_raw --maf ${params.maf} --hwe 1e-6 --memory 8000 --make-bed --const-fid --out genotype_QCed
+    plink --bfile genotype_QCed --memory 8000 --recode vcf-fid --out genotype_filtered_tem
+    grep -v ^genotype_id ${meta} | cut -d , -f 1 > genotype_sample.txt
+    ## filtering sample and remove chr (if needed)
+    bcftools view genotype_filtered_tem.vcf -S genotype_sample.txt | sed 's/chr//g' | bgzip > genotype_filtered.vcf.gz
+    rm genotype_raw*
+    rm genotype_QCed*
+    rm genotype_filtered_tem*
+    """
+}
+
+
 
 // rename BAM
 
