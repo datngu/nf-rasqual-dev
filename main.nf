@@ -86,7 +86,7 @@ workflow {
     if( params.atac_qtl ){
         atac_bam_ch = channel.fromPath( params.atac_bam, checkIfExists: true )
         //ATAC_BAM_rename(params.meta, atac_bam_ch.collect())
-        //ATAC_ADD_AS_vcf(params.genotype, ATAC_BAM_rename.out)
+        //ATAC_ADD_AS_vcf(VCF_filtering.out, ATAC_BAM_rename.out)
 
         //ATAC_FILTERING_expression(params.atac_count)
         //ATAC_PROCESS_covariates(params.meta, ATAC_FILTERING_expression.out, params.genotype)
