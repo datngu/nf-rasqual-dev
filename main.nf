@@ -127,7 +127,7 @@ workflow {
 process VCF_filtering { 
     
     publishDir "${params.trace_dir}/vcf_filtering", mode: 'symlink', overwrite: true
-    container 'ndatth/rasqual:v0.0.0'
+    container 'ndatth/qtl-package:v0.0.0'
     memory '8 GB'
     
     input:
