@@ -1,9 +1,9 @@
 #!/bin/bash
 #SBATCH --ntasks=1
 #SBATCH --nodes=1                
-#SBATCH --job-name=caQTL   
+#SBATCH --job-name=test   
 #SBATCH --mem=2G                
-#SBATCH --partition=orion
+#SBATCH --partition=gpu
 #SBATCH --mail-user=nguyen.thanh.dat@nmbu.no
 #SBATCH --mail-type=ALL
 
