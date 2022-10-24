@@ -91,7 +91,7 @@ workflow {
         ATAC_ADD_AS_vcf(VCF_filtering.out, ATAC_BAM_rename.out)
 
         ATAC_FILTERING_expression(params.atac_count, params.meta)
-        //ATAC_PROCESS_covariates(params.meta, ATAC_FILTERING_expression.out, params.genotype)
+        ATAC_PROCESS_covariates(params.meta, ATAC_FILTERING_expression.out)
         //ATAC_SPLIT_chromosome(chrom_list_ch, ATAC_ADD_AS_vcf.out, ATAC_FILTERING_expression.out )
         //ATAC_PREPROCESS_rasqual(chrom_list_ch, params.meta, ATAC_SPLIT_chromosome.out.collect(), params.genome)
 
@@ -110,7 +110,7 @@ workflow {
         GTF_GENE_INFO_parser(params.annotation)
     
         RNA_FILTERING_expression(params.rna_count, GTF_GENE_INFO_parser.out, params.meta)
-        //RNA_PROCESS_covariates(params.meta, RNA_FILTERING_expression.out, params.genotype)
+        RNA_PROCESS_covariates(params.meta, RNA_FILTERING_expression.out)
         //RNA_SPLIT_chromosome(chrom_list_ch, RNA_ADD_AS_vcf.out, RNA_FILTERING_expression.out )
         //RNA_PREPROCESS_rasqual(chrom_list_ch, params.meta, RNA_SPLIT_chromosome.out.collect(), params.genome)
 
@@ -316,14 +316,13 @@ process ATAC_PROCESS_covariates {
     input:
     path meta
     path atac_count
-    path in_vcf
 
     output:
     tuple path("atac.covs_all_chrom.bin"), path("atac.covs_all_chrom.txt")
 
     script:
     """
-    ATAC_covariates.R $meta $atac_count $in_vcf $params.phenotype_PCs
+    ATAC_covariates.R $meta $atac_count $params.phenotype_PCs
     """
 }
 
@@ -336,14 +335,13 @@ process RNA_PROCESS_covariates {
     input:
     path meta
     path rna_count_filtered
-    path in_vcf
 
     output:
     tuple path("rna.covs_all_chrom.bin"), path("rna.covs_all_chrom.txt")
 
     script:
     """
-    RNA_covariates.R $meta $rna_count_filtered $in_vcf $params.phenotype_PCs
+    RNA_covariates.R $meta $rna_count_filtered $params.phenotype_PCs
     """
 }
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 
 options(stringsAsFactors=FALSE)
-syntax='\nUsage:\t./RNA_covariates.R meta_csv salmon_gene_level_count_filtered_txt genotype_vcf phenotype_PCs'
+syntax='\nUsage:\t./RNA_covariates.R meta_csv salmon_gene_level_count_filtered_txt phenotype_PCs'
 
 
 
@@ -15,17 +15,15 @@ if(length(args) < 4 ){
 
 meta_fn = args[1]
 count_fn = args[2]
-geno_fn = args[3]
-phenotype_PCs = as.integer(args[4])
+phenotype_PCs = as.integer(args[3])
 
 
 
-# # ############
-# setwd("/mnt/SCRATCH/ngda/nf-rasqual")
+# ############
+# setwd("/Users/datn/github/nf-rasqual-dev/data")
 # # input
-#  meta_fn = "data/meta/brain.csv"
-#  count_fn = "/mnt/SCRATCH/ngda/nf-rasqual/results/RNA_filtering_expression/rna_gene_level_count_salmon_filtered.txt"
-#  geno_fn = "data/genotype.vcf.gz"
+#  meta_fn = "meta/Brain.csv"
+#  count_fn = "rna_gene_level_count_salmon_filtered.txt"
 #  phenotype_PCs = 2
 
 # ############
@@ -64,24 +62,13 @@ meta = fread(meta_fn, sep = ",")
 meta = as.data.frame(meta)
 count = fread(count_fn, skip = "gene_id", header = T, sep = "\t")
 count = as.data.frame(count)
-genotype = fread(geno_fn, skip = "CHROM", sep = "\t")
-genotype = as.data.frame(genotype)
 
-# ordering count data by genotype data
-geno_id = colnames(genotype)[-c(1:9)]
-meta = meta[meta$genotype_id %in% geno_id,]
-od = match(geno_id, meta$genotype_id)
-meta = meta[od,]
-rownames(meta) = meta$genotype_id
 
-#atac_peaks = paste(count$Geneid, count$Chr, count$Start, count$End, count$Strand, count$Length, sep = ":")
 gene_id = count$gene_id
 
 ## count maxtrix processing
 count2 = count[,-c(1:5)]
 row.names(count2) = gene_id
-count2 = count2[ , meta$rna_count_id]
-colnames(count2) = meta$genotype_id
 
 ## size factor with no GC correction
 # comput size factors

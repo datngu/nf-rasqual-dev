@@ -1,13 +1,13 @@
 #!/usr/bin/env Rscript
 
 options(stringsAsFactors=FALSE)
-syntax='\nUsage:\t./ATAC_covariates.R meta_csv feature_count_txt genotype_vcf phenotype_PCs'
+syntax='\nUsage:\t./ATAC_covariates.R meta_csv feature_count_txt phenotype_PCs'
 
 
 
 args = commandArgs(trailingOnly = TRUE)
 
-if(length(args) < 4 ){
+if(length(args) < 3 ){
   cat("\nInvalid arguments, Program stop! \n")
   cat(syntax)
   quit()
@@ -15,17 +15,15 @@ if(length(args) < 4 ){
 
 meta_fn = args[1]
 count_fn = args[2]
-geno_fn = args[3]
-phenotype_PCs = as.integer(args[4])
+phenotype_PCs = as.integer(args[3])
 
 
 
 # ############
-# setwd("/Users/datn/github/nf-rasqual/data")
+# setwd("/Users/datn/github/nf-rasqual-dev/data")
 # # input
-#  meta_fn = "meta/brain.csv"
-#  count_fn = "atac_consensus_peak_featureCounts.txt"
-#  geno_fn = "genotype.vcf.gz"
+#  meta_fn = "meta/Brain.csv"
+#  count_fn = "atac_consensus_peak_featureCounts_filtered.txt"
 #  phenotype_PCs = 2
 
 # ############
@@ -58,29 +56,16 @@ PCA_Covariates <- function(counts, size_factors, n_PCs = 2) {
 }
 
 
-
-
 meta = fread(meta_fn, sep = ",")
 meta = as.data.frame(meta)
 count = fread(count_fn, skip = "Geneid", header = T, sep = "\t")
 count = as.data.frame(count)
-genotype = fread(geno_fn, skip = "CHROM", sep = "\t")
-genotype = as.data.frame(genotype)
-
-# ordering count data by genotype data
-geno_id = colnames(genotype)[-c(1:9)]
-meta = meta[meta$genotype_id %in% geno_id,]
-od = match(geno_id, meta$genotype_id)
-meta = meta[od,]
-rownames(meta) = meta$genotype_id
 
 atac_peaks = paste(count$Geneid, count$Chr, count$Start, count$End, count$Strand, count$Length, sep = ":")
 
 ## count maxtrix processing
 count2 = count[,-c(1:6)]
 row.names(count2) = atac_peaks
-count2 = count2[ ,meta$atac_count_id]
-colnames(count2) = meta$genotype_id
 
 ## size factor with no GC correction
 # comput size factors

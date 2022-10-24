@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 
 options(stringsAsFactors=FALSE)
-syntax='\nUsage:\t./ATAC_rasqual_processor.R meta_csv feature_count_txt genotype_vcf genome.fa cis_window n_core'
+syntax='\nUsage:\t./ATAC_rasqual_processor.R feature_count_txt genotype_vcf genome.fa cis_window n_core'
 
 # defaut outputs:
 # atac.covs.bin - atac.covs.txt
@@ -13,33 +13,30 @@ syntax='\nUsage:\t./ATAC_rasqual_processor.R meta_csv feature_count_txt genotype
 
 args = commandArgs(trailingOnly = TRUE)
 
-if(length(args) < 5 ){
+if(length(args) < 4 ){
   cat("\nInvalid arguments, Program stop! \n")
   cat(syntax)
   quit()
 }
 
 cpu = NA
-meta_fn = args[1]
-count_fn = args[2]
-geno_fn = args[3]
-genome_fn = args[4]
-cis_window = as.integer(args[5])
-if(length(args) >= 6) cpu = as.integer(args[6])
+count_fn = args[1]
+geno_fn = args[2]
+genome_fn = args[3]
+cis_window = as.integer(args[4])
+if(length(args) >= 5) cpu = as.integer(args[5])
 if (is.na(cpu)) cpu=1
 cpu = as.integer(cpu)
 
 
 
-#setwd("/Users/datn/github/nf-rasqual/data")
+#setwd("/Users/datn/github/nf-rasqual-dev/data")
 
 #############
 
 # input
 #  cis_window = 10000
-#  phenotype_PCs = 2
-#  meta_fn = "meta/brain.csv"
-#  count_fn = "atac_consensus_peak_featureCounts.txt"
+#  count_fn = "atac_consensus_peak_featureCounts_filtered.txt"
 #  geno_fn = "genotype.vcf.gz"
 #  genome_fn = "/Users/datn/GENOMES/atlantic_salmon/Salmo_salar.Ssal_v3.1.dna.toplevel.fa"
 
@@ -57,8 +54,6 @@ require(data.table)
 require(foreach)
 require(doParallel)
 registerDoParallel(cores=cpu)
-
-
 set.seed(2022)
 
 
@@ -94,12 +89,10 @@ get_offset <- function(count2, GC) {
 }
 
 
-
-
-meta = fread(meta_fn, sep = ",")
-meta = as.data.frame(meta)
 count = fread(count_fn, skip = "Geneid", header = T, sep = "\t")
 count = as.data.frame(count)
+# count = count[1:100,]
+
 genotype = fread(geno_fn, skip = "CHROM", sep = "\t")
 genotype = as.data.frame(genotype)
 
@@ -109,15 +102,7 @@ tem = strsplit(names(genome), " ")
 names(genome) = do.call("rbind", tem)[,1]
 
 
-# ordering count data by genotype data
-geno_id = colnames(genotype)[-c(1:9)]
-meta = meta[meta$genotype_id %in% geno_id,]
-od = match(geno_id, meta$genotype_id)
-meta = meta[od,]
-rownames(meta) = meta$genotype_id
-
 atac_peaks = paste(count$Geneid, count$Chr, count$Start, count$End, count$Strand, count$Length, sep = ":")
-
 
 ## counting snps overlapping atac peaks
 peak_info = data.frame(gene_id = atac_peaks)
@@ -128,11 +113,11 @@ peak_info$strand = as.integer(peak_info$strand)
 peak_info$exon_starts = as.character(count$Start)
 peak_info$exon_ends = as.character(count$End)
 
+
 snp_info = genotype[,c(1:3)]
 colnames(snp_info) = c("chr", "pos", "snp_id")
-#snp_info$chr = gsub("ssa0", "", snp_info$chr, fixed = TRUE)
-#snp_info$chr = gsub("ssa", "", snp_info$chr, fixed = TRUE)
 
+# counting SNPs
 snp_counts = countSnpsOverlapingExons(peak_info, snp_info, cis_window = cis_window)
 fwrite(snp_counts, file = "snp_counts.tsv", sep = "\t")
 
@@ -141,8 +126,6 @@ fwrite(snp_counts, file = "snp_counts.tsv", sep = "\t")
 ## save count maxtrix
 count2 = count[,-c(1:6)]
 row.names(count2) = atac_peaks
-count2 = count2[ ,meta$atac_count_id]
-colnames(count2) = meta$genotype_id
 saveRasqualMatrices(list( atac = count2), ".", file_suffix = "exp")
 
 ## size factor
