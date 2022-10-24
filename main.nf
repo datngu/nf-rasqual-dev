@@ -25,8 +25,9 @@ params.atac_count      = "$baseDir/data/atac_consensus_peak_featureCounts.txt"
 params.rna_bam         = "$baseDir/data/rna_bam/*.bam"
 params.rna_count       = "$baseDir/data/rna_gene_level_count_salmon.txt"
 params.genotype        = "$baseDir/data/genotype.vcf.gz"
-params.meta            = "$baseDir/data/meta/brain.csv"
+params.meta            = "$baseDir/data/meta/Brain.csv"
 params.outdir          = "results"
+params.trace_dir       = "trace_dir"
 
 // running options
 params.chrom           = 1..29 
@@ -59,6 +60,7 @@ log.info """\
     genotype            : $params.genotype 
     meta                : $params.meta
     outdir              : $params.outdir
+    trace_dir           : $params.trace_dir
     chrom               : $params.chrom
     permute             : $params.permute
     maf                 : $params.maf
