@@ -41,7 +41,7 @@ params.eqtl_window     = 250000
 
 // pipeline options
 params.atac_qtl          = true
-params.eqtl_qtl          = false
+params.eqtl_qtl          = true
 
 
 log.info """\
@@ -88,7 +88,7 @@ workflow {
         //ATAC_BAM_rename(params.meta, atac_bam_ch.collect())
         //ATAC_ADD_AS_vcf(VCF_filtering.out, ATAC_BAM_rename.out)
 
-        //ATAC_FILTERING_expression(params.atac_count)
+        ATAC_FILTERING_expression(params.atac_count, params.meta)
         //ATAC_PROCESS_covariates(params.meta, ATAC_FILTERING_expression.out, params.genotype)
         //ATAC_SPLIT_chromosome(chrom_list_ch, ATAC_ADD_AS_vcf.out, ATAC_FILTERING_expression.out )
         //ATAC_PREPROCESS_rasqual(chrom_list_ch, params.meta, ATAC_SPLIT_chromosome.out.collect(), params.genome)
@@ -103,20 +103,20 @@ workflow {
 
     if( params.eqtl_qtl ){
         rna_bam_ch = channel.fromPath( params.rna_bam, checkIfExists: true )
-        RNA_BAM_rename(params.meta, rna_bam_ch.collect())
-        RNA_ADD_AS_vcf(params.genotype, RNA_BAM_rename.out)
+        //RNA_BAM_rename(params.meta, rna_bam_ch.collect())
+        //RNA_ADD_AS_vcf(VCF_filtering.out, RNA_BAM_rename.out)
         GTF_GENE_INFO_parser(params.annotation)
     
-        RNA_FILTERING_expression(params.rna_count, GTF_GENE_INFO_parser.out)
-        RNA_PROCESS_covariates(params.meta, RNA_FILTERING_expression.out, params.genotype)
-        RNA_SPLIT_chromosome(chrom_list_ch, RNA_ADD_AS_vcf.out, RNA_FILTERING_expression.out )
-        RNA_PREPROCESS_rasqual(chrom_list_ch, params.meta, RNA_SPLIT_chromosome.out.collect(), params.genome)
+        RNA_FILTERING_expression(params.rna_count, GTF_GENE_INFO_parser.out, params.meta)
+        //RNA_PROCESS_covariates(params.meta, RNA_FILTERING_expression.out, params.genotype)
+        //RNA_SPLIT_chromosome(chrom_list_ch, RNA_ADD_AS_vcf.out, RNA_FILTERING_expression.out )
+        //RNA_PREPROCESS_rasqual(chrom_list_ch, params.meta, RNA_SPLIT_chromosome.out.collect(), params.genome)
 
-        RNA_RUN_rasqual(chrom_list_ch, RNA_PREPROCESS_rasqual.out.collect(), RNA_SPLIT_chromosome.out.collect(), RNA_PROCESS_covariates.out)
-        RNA_RUN_rasqual_permutation(chrom_list_ch, RNA_PREPROCESS_rasqual.out.collect(), RNA_SPLIT_chromosome.out.collect(), RNA_PROCESS_covariates.out)
-        RNA_MERGE_rasqual(chrom_list_ch.max(), RNA_RUN_rasqual.out.collect())
-        RNA_MERGE_rasqual_permutation(chrom_list_ch.max(), RNA_RUN_rasqual_permutation.out.collect())
-        RNA_COMPUTE_rasqual_emperical_pvalues(RNA_MERGE_rasqual.out.collect(), RNA_MERGE_rasqual_permutation.out.collect())
+        //RNA_RUN_rasqual(chrom_list_ch, RNA_PREPROCESS_rasqual.out.collect(), RNA_SPLIT_chromosome.out.collect(), RNA_PROCESS_covariates.out)
+        //RNA_RUN_rasqual_permutation(chrom_list_ch, RNA_PREPROCESS_rasqual.out.collect(), RNA_SPLIT_chromosome.out.collect(), RNA_PROCESS_covariates.out)
+        //RNA_MERGE_rasqual(chrom_list_ch.max(), RNA_RUN_rasqual.out.collect())
+        //RNA_MERGE_rasqual_permutation(chrom_list_ch.max(), RNA_RUN_rasqual_permutation.out.collect())
+        //RNA_COMPUTE_rasqual_emperical_pvalues(RNA_MERGE_rasqual.out.collect(), RNA_MERGE_rasqual_permutation.out.collect())
     }
 }
 
@@ -141,9 +141,9 @@ process VCF_filtering {
     """
     #"in_vcf"=tcel.vcf.gz
     #meta=/sigma4/projects/nf-circall-qtl/data/meta.csv
-    plink --vcf ${in_vcf} --make-bed --out genotype_raw --memory 8000
-    plink --bfile genotype_raw --maf ${params.maf} --hwe 1e-6 --memory 8000 --make-bed --const-fid --out genotype_QCed
-    plink --bfile genotype_QCed --memory 8000 --recode vcf-fid --out genotype_filtered_tem
+    plink --vcf ${in_vcf} --allow-extra-chr --make-bed --out genotype_raw --memory 8000
+    plink --bfile genotype_raw --allow-extra-chr --maf ${params.maf} --hwe 1e-6 --memory 8000 --make-bed --const-fid --out genotype_QCed
+    plink --bfile genotype_QCed --allow-extra-chr --memory 8000 --recode vcf-fid --out genotype_filtered_tem
     grep -v ^genotype_id ${meta} | cut -d , -f 1 > genotype_sample.txt
     ## filtering sample and remove chr (if needed)
     bcftools view genotype_filtered_tem.vcf -S genotype_sample.txt | sed 's/chr//g' | bgzip > genotype_filtered.vcf.gz
@@ -256,13 +256,14 @@ process ATAC_FILTERING_expression {
 
     input:
     path atac_count
+    path meta
 
     output:
     path "atac_consensus_peak_featureCounts_filtered.txt"
 
     script:
     """
-    ATAC_filtering.R $atac_count atac_consensus_peak_featureCounts_filtered.txt $params.exp_prop $params.fpkm_cutoff
+    ATAC_filtering.R $atac_count atac_consensus_peak_featureCounts_filtered.txt $params.exp_prop $params.fpkm_cutoff $meta
     """
 }
 
@@ -296,13 +297,14 @@ process RNA_FILTERING_expression {
     input:
     path rna_count
     path gene_info
+    path meta
 
     output:
     path "rna_gene_level_count_salmon_filtered.txt"
 
     script:
     """
-    RNA_filtering.R $rna_count rna_gene_level_count_salmon_filtered.txt $gene_info $params.exp_prop $params.fpkm_cutoff
+    RNA_filtering.R $rna_count rna_gene_level_count_salmon_filtered.txt $gene_info $params.exp_prop $params.fpkm_cutoff $meta
     """
 }
 

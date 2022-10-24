@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 
 options(stringsAsFactors=FALSE)
-syntax='\nUsage:\t./RNA_filtering.R in_count out_count gene_info exp_prop fpkm_cutoff'
+syntax='\nUsage:\t./RNA_filtering.R in_count out_count gene_info exp_prop fpkm_cutoff meta_csv'
 
 
 args = commandArgs(trailingOnly = TRUE)
@@ -17,7 +17,7 @@ out_fn = args[2]
 gene_info = args[3]
 exp_prop = as.numeric(args[4])
 fpkm_cutoff = as.numeric(args[5])
-
+meta_csv = args[6]
 
 compute_size_factor <- function(counts){
 
@@ -52,14 +52,21 @@ require(data.table)
 
 
 count = fread(in_count, header = T)
-#tpm = fread(in_tpm, header = T)
+count = as.data.frame(count)
+meta = fread(meta_csv)
+meta = as.data.frame(meta)
 
+count2 = count[,c(1,2)]
 count2 = count[,-c(1,2)]
+count2 = count2[, meta$rna_count_id]
+names(count2) = meta$genotype_id
+
 fpkm = compute_fpkm(count2)
 fpkm2 = fpkm > fpkm_cutoff
 pick = rowSums(fpkm2)/ncol(fpkm2) >= exp_prop
 
-count3 = count[pick,]
+count3 = cbind(count1, count2)
+count3 = count3[pick,]
 count3 = count3[,-2]
 
 info = fread(gene_info, header = F)

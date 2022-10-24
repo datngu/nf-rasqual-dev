@@ -37,6 +37,6 @@ genotype=/mnt/users/ngda/ngs_data/atlantic_salmon/wgs/processed_all_chrom.vcf.gz
 ##
 outdir=results
 
-export NXF_SINGULARITY_LIBRARYDIR=/mnt/users/ngda/sofware/singularity
+export NXF_SINGULARITY_CACHEDIR=/mnt/users/ngda/sofware/singularity
 ##
 nextflow run main.nf -resume --genome $genome --annotation $annotation --atac_bam $atac_bam --atac_count $atac_count --rna_bam $rna_bam --rna_count $rna_count --genotype $genotype --outdir $outdir
