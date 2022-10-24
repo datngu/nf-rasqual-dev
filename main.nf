@@ -87,8 +87,8 @@ workflow {
     // ATAC QTL
     if( params.atac_qtl ){
         atac_bam_ch = channel.fromPath( params.atac_bam, checkIfExists: true )
-        //ATAC_BAM_rename(params.meta, atac_bam_ch.collect())
-        //ATAC_ADD_AS_vcf(VCF_filtering.out, ATAC_BAM_rename.out)
+        ATAC_BAM_rename(params.meta, atac_bam_ch.collect())
+        ATAC_ADD_AS_vcf(VCF_filtering.out, ATAC_BAM_rename.out)
 
         ATAC_FILTERING_expression(params.atac_count, params.meta)
         //ATAC_PROCESS_covariates(params.meta, ATAC_FILTERING_expression.out, params.genotype)
@@ -105,8 +105,8 @@ workflow {
 
     if( params.eqtl_qtl ){
         rna_bam_ch = channel.fromPath( params.rna_bam, checkIfExists: true )
-        //RNA_BAM_rename(params.meta, rna_bam_ch.collect())
-        //RNA_ADD_AS_vcf(VCF_filtering.out, RNA_BAM_rename.out)
+        RNA_BAM_rename(params.meta, rna_bam_ch.collect())
+        RNA_ADD_AS_vcf(VCF_filtering.out, RNA_BAM_rename.out)
         GTF_GENE_INFO_parser(params.annotation)
     
         RNA_FILTERING_expression(params.rna_count, GTF_GENE_INFO_parser.out, params.meta)
