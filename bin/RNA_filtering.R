@@ -56,7 +56,7 @@ count = as.data.frame(count)
 meta = fread(meta_csv)
 meta = as.data.frame(meta)
 
-count2 = count[,c(1,2)]
+count1 = count[,c(1,2)]
 count2 = count[,-c(1,2)]
 count2 = count2[, meta$rna_count_id]
 names(count2) = meta$genotype_id
