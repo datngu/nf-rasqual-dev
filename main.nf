@@ -92,8 +92,8 @@ workflow {
 
         ATAC_FILTERING_expression(params.atac_count, params.meta)
         ATAC_PROCESS_covariates(params.meta, ATAC_FILTERING_expression.out)
-        //ATAC_SPLIT_chromosome(chrom_list_ch, ATAC_ADD_AS_vcf.out, ATAC_FILTERING_expression.out )
-        //ATAC_PREPROCESS_rasqual(chrom_list_ch, params.meta, ATAC_SPLIT_chromosome.out.collect(), params.genome)
+        ATAC_SPLIT_chromosome(chrom_list_ch, ATAC_ADD_AS_vcf.out, ATAC_FILTERING_expression.out )
+        ATAC_PREPROCESS_rasqual(chrom_list_ch, ATAC_SPLIT_chromosome.out.collect(), params.genome)
 
         //ATAC_RUN_rasqual(chrom_list_ch, ATAC_PREPROCESS_rasqual.out.collect(), ATAC_SPLIT_chromosome.out.collect(), ATAC_PROCESS_covariates.out)
         //ATAC_RUN_rasqual_permutation(chrom_list_ch, ATAC_PREPROCESS_rasqual.out.collect(), ATAC_SPLIT_chromosome.out.collect(), ATAC_PROCESS_covariates.out)
@@ -111,8 +111,8 @@ workflow {
     
         RNA_FILTERING_expression(params.rna_count, GTF_GENE_INFO_parser.out, params.meta)
         RNA_PROCESS_covariates(params.meta, RNA_FILTERING_expression.out)
-        //RNA_SPLIT_chromosome(chrom_list_ch, RNA_ADD_AS_vcf.out, RNA_FILTERING_expression.out )
-        //RNA_PREPROCESS_rasqual(chrom_list_ch, params.meta, RNA_SPLIT_chromosome.out.collect(), params.genome)
+        RNA_SPLIT_chromosome(chrom_list_ch, RNA_ADD_AS_vcf.out, RNA_FILTERING_expression.out )
+        RNA_PREPROCESS_rasqual(chrom_list_ch, RNA_SPLIT_chromosome.out.collect(), params.genome)
 
         //RNA_RUN_rasqual(chrom_list_ch, RNA_PREPROCESS_rasqual.out.collect(), RNA_SPLIT_chromosome.out.collect(), RNA_PROCESS_covariates.out)
         //RNA_RUN_rasqual_permutation(chrom_list_ch, RNA_PREPROCESS_rasqual.out.collect(), RNA_SPLIT_chromosome.out.collect(), RNA_PROCESS_covariates.out)
@@ -416,7 +416,6 @@ process ATAC_PREPROCESS_rasqual {
 
     input:
     val chr
-    path meta
     path split_chrom
     path genome
 
@@ -426,7 +425,7 @@ process ATAC_PREPROCESS_rasqual {
 
     script:
     """
-    ATAC_rasqual_processor.R ${meta} ${chr}_count.txt ${chr}.vcf.gz $genome $params.atac_window ${task.cpus}
+    ATAC_rasqual_processor.R ${chr}_count.txt ${chr}.vcf.gz $genome $params.atac_window ${task.cpus}
     ## rename files
     mv atac.exp.bin ${chr}_atac.exp.bin
     mv atac.exp.txt ${chr}_atac.exp.txt
@@ -446,7 +445,6 @@ process RNA_PREPROCESS_rasqual {
 
     input:
     val chr
-    path meta
     path split_chrom
     path genome
 
@@ -456,7 +454,7 @@ process RNA_PREPROCESS_rasqual {
 
     script:
     """
-    RNA_rasqual_processor.R ${meta} ${chr}_count.txt ${chr}.vcf.gz $genome $params.eqtl_window ${task.cpus}
+    RNA_rasqual_processor.R ${chr}_count.txt ${chr}.vcf.gz $genome $params.eqtl_window ${task.cpus}
     ## rename files
     mv rna.exp.bin ${chr}_rna.exp.bin
     mv rna.exp.txt ${chr}_rna.exp.txt
