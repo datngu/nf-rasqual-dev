@@ -127,7 +127,7 @@ workflow {
 process VCF_filtering { 
     
     publishDir "${params.trace_dir}/vcf_filtering", mode: 'symlink', overwrite: true
-    container 'ndatth/qtl-package:v0.0.0'
+    container 'ndatth/rasqual:v0.0.0'
     memory '8 GB'
     
     input:
@@ -139,17 +139,10 @@ process VCF_filtering {
  
     script:
     """
-    #"in_vcf"=tcel.vcf.gz
-    #meta=/sigma4/projects/nf-circall-qtl/data/meta.csv
-    plink --vcf ${in_vcf} --allow-extra-chr --make-bed --out genotype_raw --memory 8000
-    plink --bfile genotype_raw --allow-extra-chr --maf ${params.maf} --hwe 1e-6 --memory 8000 --make-bed --const-fid --out genotype_QCed
-    plink --bfile genotype_QCed --allow-extra-chr --memory 8000 --recode vcf-fid --out genotype_filtered_tem
+    # in_vcf=genotype.vcf.gz
+    # meta=meta/brain.csv
     grep -v ^genotype_id ${meta} | cut -d , -f 1 > genotype_sample.txt
-    ## filtering sample and remove chr (if needed)
-    bcftools view genotype_filtered_tem.vcf -S genotype_sample.txt | sed 's/chr//g' | bgzip > genotype_filtered.vcf.gz
-    rm genotype_raw*
-    rm genotype_QCed*
-    rm genotype_filtered_tem*
+    bcftools view $in_vcf -S genotype_sample.txt | sed 's/chr//g' | bgzip > genotype_filtered.vcf.gz
     """
 }
 

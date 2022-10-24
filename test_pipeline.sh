@@ -13,6 +13,7 @@ module load git/2.23.0-GCCcore-9.3.0-nodocs
 module load Nextflow/21.03
 module load singularity/rpm
 
+# export PATH=$PATH:/Users/datn/Downloads/plink_mac_20220402
 # git clone https://github.com/datngu/nf-rasqual-dev.git
 
 cd /mnt/SCRATCH/ngda/nf-rasqual-dev
