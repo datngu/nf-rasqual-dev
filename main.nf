@@ -79,7 +79,7 @@ workflow {
     // channel general processing
     chrom_list_ch = channel.from(params.chrom)
     //chrom_list_ch.collect().toList().view()
-    VCF_filtering(params.genotype)
+    VCF_filtering(params.genotype, params.meta)
 
 
     // ATAC QTL

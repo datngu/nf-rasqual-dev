@@ -17,7 +17,6 @@ module load singularity/rpm
 
 cd /mnt/SCRATCH/ngda/nf-rasqual-dev
 
-git pull
 
 #
 genome=/mnt/users/ngda/genomes/atlantic_salmon/Salmo_salar.Ssal_v3.1.dna_sm.toplevel.fa
