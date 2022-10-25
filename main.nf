@@ -592,7 +592,7 @@ process ATAC_RUN_rasqual_permutation {
 
 
     output:
-    tuple val(${chr}), val(${permute_flag}), path("${chr}_permute_${permute_flag}_rasqual_lead_snp.txt")
+    tuple val("${chr}"), val("${permute_flag}"), path("${chr}_permute_${permute_flag}_rasqual_lead_snp.txt")
 
 
     script:
