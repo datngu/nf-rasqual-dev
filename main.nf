@@ -96,7 +96,7 @@ workflow {
         ATAC_SPLIT_chromosome(chrom_list_ch, ATAC_ADD_AS_vcf.out, ATAC_FILTERING_expression.out )
         ATAC_PREPROCESS_rasqual(chrom_list_ch, ATAC_SPLIT_chromosome.out.collect(), params.genome)
 
-        ATAC_RUN_rasqual(chrom_list_ch, ATAC_PREPROCESS_rasqual.out.collect(), ATAC_SPLIT_chromosome.out.collect(), ATAC_PROCESS_covariates.out)
+        //ATAC_RUN_rasqual(chrom_list_ch, ATAC_PREPROCESS_rasqual.out.collect(), ATAC_SPLIT_chromosome.out.collect(), ATAC_PROCESS_covariates.out)
 
         ATAC_rasqual_permutation_input_ch = chrom_list_ch.combine(permute_ch)
         //ATAC_rasqual_permutation_input_ch.view()
