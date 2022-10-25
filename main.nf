@@ -98,9 +98,9 @@ workflow {
 
         ATAC_RUN_rasqual(chrom_list_ch, ATAC_PREPROCESS_rasqual.out.collect(), ATAC_SPLIT_chromosome.out.collect(), ATAC_PROCESS_covariates.out)
 
-        //ATAC_rasqual_permutation_input_ch = chrom_list_ch.combine(permute_ch)
+        ATAC_rasqual_permutation_input_ch = chrom_list_ch.combine(permute_ch)
         //ATAC_rasqual_permutation_input_ch.view()
-        //ATAC_RUN_rasqual_permutation(ATAC_rasqual_permutation_input_ch, ATAC_PREPROCESS_rasqual.out.collect(), ATAC_SPLIT_chromosome.out.collect(), ATAC_PROCESS_covariates.out)
+        ATAC_RUN_rasqual_permutation(ATAC_rasqual_permutation_input_ch, ATAC_PREPROCESS_rasqual.out.collect(), ATAC_SPLIT_chromosome.out.collect(), ATAC_PROCESS_covariates.out)
 
         ATAC_MERGE_rasqual(chrom_list_ch.max(), ATAC_RUN_rasqual.out.collect())
         //ATAC_MERGE_rasqual_permutation(chrom_list_ch.max(), permute_ch, ATAC_RUN_rasqual_permutation.out)
