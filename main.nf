@@ -31,7 +31,7 @@ params.trace_dir       = "trace_dir"
 
 // running options
 params.chrom           = 1..29 
-params.permute         = 10
+params.permute         = 1..11
 params.phenotype_PCs   = 2 
 params.exp_prop        = 0.5
 params.fpkm_cutoff     = 0.5
@@ -80,6 +80,7 @@ workflow {
 
     // channel general processing
     chrom_list_ch = channel.from(params.chrom)
+    permute_ch = channel.from(params.permute)
     //chrom_list_ch.collect().toList().view()
     VCF_filtering(params.genotype, params.meta)
 
@@ -96,10 +97,14 @@ workflow {
         ATAC_PREPROCESS_rasqual(chrom_list_ch, ATAC_SPLIT_chromosome.out.collect(), params.genome)
 
         //ATAC_RUN_rasqual(chrom_list_ch, ATAC_PREPROCESS_rasqual.out.collect(), ATAC_SPLIT_chromosome.out.collect(), ATAC_PROCESS_covariates.out)
-        //ATAC_RUN_rasqual_permutation(chrom_list_ch, ATAC_PREPROCESS_rasqual.out.collect(), ATAC_SPLIT_chromosome.out.collect(), ATAC_PROCESS_covariates.out)
+
+        ATAC_rasqual_permutation_input_ch = chrom_list_ch.combine(permute_ch)
+        ATAC_rasqual_permutation_input_ch.view()
+
+        //ATAC_RUN_rasqual_permutation(chrom_list_ch, permute_ch, ATAC_PREPROCESS_rasqual.out.collect(), ATAC_SPLIT_chromosome.out.collect(), ATAC_PROCESS_covariates.out)
 
         //ATAC_MERGE_rasqual(chrom_list_ch.max(), ATAC_RUN_rasqual.out.collect())
-        //ATAC_MERGE_rasqual_permutation(chrom_list_ch.max(), ATAC_RUN_rasqual_permutation.out.collect())
+        //ATAC_MERGE_rasqual_permutation(chrom_list_ch.max(), permute_ch, ATAC_RUN_rasqual_permutation.out)
         //ATAC_COMPUTE_rasqual_emperical_pvalues(ATAC_MERGE_rasqual.out.collect(), ATAC_MERGE_rasqual_permutation.out.collect())
     }
 
@@ -582,25 +587,20 @@ process ATAC_RUN_rasqual_permutation {
 
     input:
     val chr
+    val permute_flag
     path preproces_data
     path split_chrom
     path covariates
 
+
     output:
-    path("${chr}_permute_*_rasqual_lead_snp.txt")
+    path("${chr}_permute_${permute_flag}_rasqual_lead_snp.txt")
 
 
     script:
     """
-    rasqual_permute.sh ${chr}.vcf.gz ${chr}_atac.exp.bin ${chr}_atac.size_factors.bin atac.covs_all_chrom.bin atac.covs_all_chrom.txt ${chr}_snp_counts.tsv ${task.cpus} ${params.permute} ${chr}
-
-
-    for i in \$(seq 1 $params.permute)
-    do
-        rasqual_permute.R vcf=${chr}.vcf.gz y=${chr}_atac.exp.bin k=${chr}_atac.size_factors.bin x=atac.covs_all_chrom.bin x_txt=atac.covs_all_chrom.txt meta=${chr}_snp_counts.tsv out=${chr}_permute_\${i}_rasqual_lead_snp.txt cpu=${task.cpus}
+    rasqual_permute.R vcf=${chr}.vcf.gz y=${chr}_atac.exp.bin k=${chr}_atac.size_factors.bin x=atac.covs_all_chrom.bin x_txt=atac.covs_all_chrom.txt meta=${chr}_snp_counts.tsv out=${chr}_permute_${permute_flag}_rasqual_lead_snp.txt cpu=${task.cpus}
     done
-
-
     """
 }
 
@@ -614,20 +614,20 @@ process RNA_RUN_rasqual_permutation {
 
     input:
     val chr
+    val permute_flag
     path preproces_data
     path split_chrom
     path covariates
 
+
     output:
-    path("${chr}_permute_*_rasqual_lead_snp.txt")
+    path("${chr}_permute_${permute_flag}_rasqual_lead_snp.txt")
 
 
     script:
     """
 
-    for i in \$(seq 1 $params.permute)
-    do
-        rasqual_permute.R vcf=${chr}.vcf.gz y=${chr}_rna.exp.bin k=${chr}_rna.size_factors.bin x=rna.covs_all_chrom.bin x_txt=rna.covs_all_chrom.txt meta=${chr}_snp_counts.tsv out=${chr}_permute_\${i}_rasqual_lead_snp.txt cpu=${task.cpus}
+    rasqual_permute.R vcf=${chr}.vcf.gz y=${chr}_rna.exp.bin k=${chr}_rna.size_factors.bin x=rna.covs_all_chrom.bin x_txt=rna.covs_all_chrom.txt meta=${chr}_snp_counts.tsv out=${chr}_permute_${permute_flag}_rasqual_lead_snp.txt cpu=${task.cpus}
     done
 
     """
@@ -644,20 +644,19 @@ process ATAC_MERGE_rasqual_permutation {
 
     input:
     val max_chr
+    val permute_flag
     path atac_rasqual_results
+    
 
     output:
-    path("permute_*_all_chromosome_rasqual_lead_snp.txt")
+    path("permute_${permute_flag}_all_chromosome_rasqual_lead_snp.txt")
 
 
     script:
     """
-    for i in \$(seq 1 $params.permute)
+    for chr in \$(seq 1 $max_chr)
     do
-        for chr in \$(seq 1 $max_chr)
-        do
-            cat \${chr}_permute_\${i}_rasqual_lead_snp.txt >> permute_\${i}_all_chromosome_rasqual_lead_snp.txt
-        done
+        cat \${chr}_permute_${permute_flag}_rasqual_lead_snp.txt >> permute_${permute_flag}_all_chromosome_rasqual_lead_snp.txt
     done
     """
 }
@@ -672,20 +671,18 @@ process RNA_MERGE_rasqual_permutation {
 
     input:
     val max_chr
+    val permute_flag
     path rasqual_results
 
     output:
-    path("permute_*_all_chromosome_rasqual_lead_snp.txt")
+    path("permute_${permute_flag}_all_chromosome_rasqual_lead_snp.txt")
 
 
     script:
     """
-    for i in \$(seq 1 $params.permute)
+    for chr in \$(seq 1 $max_chr)
     do
-        for chr in \$(seq 1 $max_chr)
-        do
-            cat \${chr}_permute_\${i}_rasqual_lead_snp.txt >> permute_\${i}_all_chromosome_rasqual_lead_snp.txt
-        done
+        cat \${chr}_permute_${permute_flag}_rasqual_lead_snp.txt >> permute_${permute_flag}_all_chromosome_rasqual_lead_snp.txt
     done
     """
 }

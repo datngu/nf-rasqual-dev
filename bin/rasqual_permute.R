@@ -72,7 +72,7 @@ job_list = foreach(j = 1:nrow(info),.combine=rbind) %dopar% {
     cmd = paste0(cmd, " | rasqual -y ", y, " -k ", k, " -x ", x, " -n ", n, " -j ", j, " -l ", row[9], " -m ", row[8] )
     cmd = paste0(cmd, " -s ", row[4], " -e ", row[5], " -f " , row[1])
     cmd = paste0(cmd, " --random-permutation -t > ./tem_results/", row[1])
-    system(cmd)
+    try(system(cmd))
 }
 
 ## test
