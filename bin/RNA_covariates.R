@@ -7,7 +7,7 @@ syntax='\nUsage:\t./RNA_covariates.R meta_csv salmon_gene_level_count_filtered_t
 
 args = commandArgs(trailingOnly = TRUE)
 
-if(length(args) < 4 ){
+if(length(args) < 3 ){
   cat("\nInvalid arguments, Program stop! \n")
   cat(syntax)
   quit()
