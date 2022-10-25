@@ -592,7 +592,7 @@ process ATAC_RUN_rasqual_permutation {
 
 
     output:
-    tuple val("${chr}"), val("${permute_flag}"), path("${chr}_permute_${permute_flag}_rasqual_lead_snp.txt")
+    val("${permute_flag}"), path("${chr}_permute_${permute_flag}_rasqual_lead_snp.txt")
 
 
     script:
@@ -611,20 +611,17 @@ process RNA_RUN_rasqual_permutation {
     cpus 16
 
     input:
-    val chr
-    val permute_flag
+    tuple val(chr), val(permute_flag)
     path preproces_data
     path split_chrom
     path covariates
 
 
     output:
-    path("${chr}_permute_${permute_flag}_rasqual_lead_snp.txt")
-
+    val("${permute_flag}"), path("${chr}_permute_${permute_flag}_rasqual_lead_snp.txt")
 
     script:
     """
-
     rasqual_permute.R vcf=${chr}.vcf.gz y=${chr}_rna.exp.bin k=${chr}_rna.size_factors.bin x=rna.covs_all_chrom.bin x_txt=rna.covs_all_chrom.txt meta=${chr}_snp_counts.tsv out=${chr}_permute_${permute_flag}_rasqual_lead_snp.txt cpu=${task.cpus}
     done
 
