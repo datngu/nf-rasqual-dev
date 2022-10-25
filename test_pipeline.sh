@@ -15,9 +15,8 @@ module load singularity/rpm
 
 # export PATH=$PATH:/Users/datn/Downloads/plink_mac_20220402
 # git clone https://github.com/datngu/nf-rasqual-dev.git
-
 cd /mnt/SCRATCH/ngda/nf-rasqual-dev
-
+git pull
 
 #
 genome=/mnt/users/ngda/genomes/atlantic_salmon/Salmo_salar.Ssal_v3.1.dna_sm.toplevel.fa
