@@ -122,6 +122,7 @@ workflow {
 
         RNA_rasqual_permutation_input_ch = chrom_list_ch.combine(permute_ch)
         RNA_RUN_rasqual_permutation(RNA_rasqual_permutation_input_ch, RNA_PREPROCESS_rasqual.out.collect(), RNA_SPLIT_chromosome.out.collect(), RNA_PROCESS_covariates.out)
+        
         RNA_MERGE_rasqual(chrom_list_ch.max(), RNA_RUN_rasqual.out.collect())
         //RNA_MERGE_rasqual_permutation(chrom_list_ch.max(), RNA_RUN_rasqual_permutation.out.collect())
         //RNA_COMPUTE_rasqual_emperical_pvalues(RNA_MERGE_rasqual.out.collect(), RNA_MERGE_rasqual_permutation.out.collect())
