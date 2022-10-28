@@ -90,8 +90,8 @@ workflow {
     if(params.loo){
         LOO_meta_csv(params.meta)
         LOO_get_sample_ID(params.meta)
-        LOO_get_sample_ID2(LOO_get_sample_ID.out)
-        //LOO_get_sample_ID2.out.view()
+        LOO_get_sample_ID2(LOO_get_sample_ID.out.collate(1))
+        LOO_get_sample_ID2.out.view()
     }
 
     // ATAC QTL
@@ -122,7 +122,7 @@ workflow {
         if(params.loo){
             LOO_atac_vcf(params.meta, ATAC_ADD_AS_vcf.out)
             LOO_atac(params.meta, ATAC_FILTERING_expression.out)
-            LOO_ATAC_PROCESS_covariates(LOO_get_sample_ID2.out.collate(1), LOO_meta_csv.out.collect(), LOO_atac.out.collect())
+            //LOO_ATAC_PROCESS_covariates(LOO_get_sample_ID2.out, LOO_meta_csv.out.collect(), LOO_atac.out.collect())
         }
     }
 
@@ -152,7 +152,7 @@ workflow {
         if(params.loo){
             LOO_rna_vcf(params.meta, RNA_ADD_AS_vcf.out)
             LOO_rna(params.meta, RNA_FILTERING_expression.out)
-            LOO_RNA_PROCESS_covariates(LOO_get_sample_ID2.out.collate(1), LOO_meta_csv.out.collect(), LOO_rna.out.collect())
+            //LOO_RNA_PROCESS_covariates(LOO_get_sample_ID2.out, LOO_meta_csv.out.collect(), LOO_rna.out.collect())
         }
         
     }
