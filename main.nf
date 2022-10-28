@@ -102,10 +102,15 @@ workflow {
         //ATAC_rasqual_permutation_input_ch.view()
         ATAC_RUN_rasqual_permutation(ATAC_rasqual_permutation_input_ch, ATAC_PREPROCESS_rasqual.out.collect(), ATAC_SPLIT_chromosome.out.collect(), ATAC_PROCESS_covariates.out)
 
+
         ATAC_MERGE_rasqual(chrom_list_ch.max(), ATAC_RUN_rasqual.out.collect())
-        //ATAC_MERGE_rasqual_permutation(chrom_list_ch.max(), permute_ch, ATAC_RUN_rasqual_permutation.out)
+
+        ATAC_RUN_rasqual_permutation.out.groupTuple().view()
+        ATAC_MERGE_rasqual_permutation(chrom_list_ch.max(), ATAC_RUN_rasqual_permutation.out.groupTuple())
+        
         //ATAC_COMPUTE_rasqual_emperical_pvalues(ATAC_MERGE_rasqual.out.collect(), ATAC_MERGE_rasqual_permutation.out.collect())
     }
+
 
     if( params.eqtl_qtl ){
         rna_bam_ch = channel.fromPath( params.rna_bam, checkIfExists: true )
@@ -122,9 +127,11 @@ workflow {
 
         RNA_rasqual_permutation_input_ch = chrom_list_ch.combine(permute_ch)
         RNA_RUN_rasqual_permutation(RNA_rasqual_permutation_input_ch, RNA_PREPROCESS_rasqual.out.collect(), RNA_SPLIT_chromosome.out.collect(), RNA_PROCESS_covariates.out)
-        
+
         RNA_MERGE_rasqual(chrom_list_ch.max(), RNA_RUN_rasqual.out.collect())
-        //RNA_MERGE_rasqual_permutation(chrom_list_ch.max(), RNA_RUN_rasqual_permutation.out.collect())
+
+        RNA_RUN_rasqual_permutation.out.groupTuple().view()
+        RNA_MERGE_rasqual_permutation(chrom_list_ch.max(), RNA_RUN_rasqual_permutation.out.groupTuple())
         //RNA_COMPUTE_rasqual_emperical_pvalues(RNA_MERGE_rasqual.out.collect(), RNA_MERGE_rasqual_permutation.out.collect())
     }
 }
@@ -648,8 +655,7 @@ process ATAC_MERGE_rasqual_permutation {
 
     input:
     val max_chr
-    val permute_flag
-    path atac_rasqual_results
+    tuple val("permute_flag"), path(rasqual_results)
     
 
     output:
@@ -675,8 +681,7 @@ process RNA_MERGE_rasqual_permutation {
 
     input:
     val max_chr
-    val permute_flag
-    path rasqual_results
+    tuple val("permute_flag"), path(rasqual_results)
 
     output:
     path("permute_${permute_flag}_all_chromosome_rasqual_lead_snp.txt")
