@@ -43,7 +43,6 @@ params.eqtl_window     = 250000
 // pipeline options
 params.atac_qtl          = true
 params.eqtl_qtl          = true
-params.loo               = true
 
 
 log.info """\
@@ -71,7 +70,6 @@ log.info """\
     phenotype_PCs       : $params.phenotype_PCs
     atac_qtl            : $params.atac_qtl
     eqtl_qtl            : $params.eqtl_qtl
-    loo                 : $params.loo
 ================================================================
 """
 
@@ -86,10 +84,6 @@ workflow {
     //chrom_list_ch.collect().toList().view()
     VCF_filtering(params.genotype, params.meta)
 
-    // Leave one out implementation
-    if(params.loo){
-        LOO_meta_csv(params.meta)
-    }
 
     // ATAC QTL
     if( params.atac_qtl ){
@@ -115,11 +109,6 @@ workflow {
         ATAC_MERGE_rasqual_permutation(chrom_list_ch.max(), ATAC_RUN_rasqual_permutation.out.groupTuple())
         
         //ATAC_COMPUTE_rasqual_emperical_pvalues(ATAC_MERGE_rasqual.out.collect(), ATAC_MERGE_rasqual_permutation.out.collect())
-
-        if(params.loo){
-            LOO_atac_vcf(params.meta, ATAC_ADD_AS_vcf.out)
-            LOO_atac(params.meta, ATAC_FILTERING_expression.out)
-        }
     }
 
 
@@ -144,11 +133,6 @@ workflow {
         //RNA_RUN_rasqual_permutation.out.groupTuple().view()
         RNA_MERGE_rasqual_permutation(chrom_list_ch.max(), RNA_RUN_rasqual_permutation.out.groupTuple())
         //RNA_COMPUTE_rasqual_emperical_pvalues(RNA_MERGE_rasqual.out.collect(), RNA_MERGE_rasqual_permutation.out.collect())
-        
-        if(params.loo){
-            LOO_rna_vcf(params.meta, RNA_ADD_AS_vcf.out)
-            LOO_rna(params.meta, RNA_FILTERING_expression.out)
-        }
     }
 }
 
@@ -761,103 +745,3 @@ process RNA_COMPUTE_rasqual_emperical_pvalues {
 // LEAVE ONE OUT ANALYSES
 
 
-process LOO_meta_csv {
-
-    container 'ndatth/rasqual:v0.0.0'
-    publishDir "${params.outdir}/loo_meta", mode: 'symlink', overwrite: true
-    memory '8 GB'
-
-    input:
-    path meta
-
-    output:
-    path "*_meta.csv"
-
-    script:
-    """
-    loo_meta.R $meta
-    """
-}
-
-
-
-process LOO_atac {
-
-    container 'ndatth/rasqual:v0.0.0'
-    publishDir "${params.outdir}/loo_ATAC", mode: 'symlink', overwrite: true
-    memory '8 GB'
-
-    input:
-    path meta
-    path atac_count_filtered
-
-    output:
-    path "*_atac_count.txt"
-
-    script:
-    """
-    loo_ATAC.R $meta $atac_count_filtered
-    """
-}
-
-
-process LOO_atac_vcf {
-
-    container 'ndatth/rasqual:v0.0.0'
-    publishDir "${params.outdir}/loo_atac_vcf", mode: 'symlink', overwrite: true
-    memory '8 GB'
-
-    input:
-    path meta
-    path vcf
-
-    output:
-    path("*_loo.vcf.*")
-
-
-    script:
-    """
-    loo_VCF.R $meta "processed.vcf.gz"
-    """
-}
-
-
-process LOO_rna {
-
-    container 'ndatth/rasqual:v0.0.0'
-    publishDir "${params.outdir}/loo_rna", mode: 'symlink', overwrite: true
-    memory '8 GB'
-
-    input:
-    path meta
-    path rna_count_filtered
-
-    output:
-    path "*_rna_count.txt"
-
-    script:
-    """
-    loo_RNA.R $meta $rna_count_filtered
-    """
-}
-
-
-process LOO_rna_vcf {
-
-    container 'ndatth/rasqual:v0.0.0'
-    publishDir "${params.outdir}/loo_rna_vcf", mode: 'symlink', overwrite: true
-    memory '8 GB'
-
-    input:
-    path meta
-    path vcf
-
-    output:
-    path("*_loo.vcf.*")
-
-
-    script:
-    """
-    loo_VCF.R $meta "processed.vcf.gz"
-    """
-}
