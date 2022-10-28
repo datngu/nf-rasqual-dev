@@ -89,13 +89,7 @@ workflow {
     if(params.loo){
         LOO_meta_csv(params.meta)
         ID_ch = LOO_meta_csv.out.map{ infile -> tuple( infile.baseName) }.flatten()
-        ID_ch.view()
-
-        //LOO_get_sample_ID(params.meta)
-        //LOO_get_sample_ID.out.buffer(size:1).view()
-        //LOO_get_sample_ID.out.view()
-        //LOO_get_sample_ID2(LOO_get_sample_ID.out.buffer(size:1))
-        //LOO_get_sample_ID2.out.view()
+        //ID_ch.view()
     }
 
     // ATAC QTL
@@ -123,6 +117,7 @@ workflow {
         
         //ATAC_COMPUTE_rasqual_emperical_pvalues(ATAC_MERGE_rasqual.out.collect(), ATAC_MERGE_rasqual_permutation.out.collect())
 
+        // Leave one out implementation
         if(params.loo){
             LOO_atac_vcf(params.meta, ATAC_ADD_AS_vcf.out)
             LOO_atac(params.meta, ATAC_FILTERING_expression.out)
@@ -158,6 +153,7 @@ workflow {
         RNA_MERGE_rasqual_permutation(chrom_list_ch.max(), RNA_RUN_rasqual_permutation.out.groupTuple())
         //RNA_COMPUTE_rasqual_emperical_pvalues(RNA_MERGE_rasqual.out.collect(), RNA_MERGE_rasqual_permutation.out.collect())
         
+        // Leave one out implementation
         if(params.loo){
             LOO_rna_vcf(params.meta, RNA_ADD_AS_vcf.out)
             LOO_rna(params.meta, RNA_FILTERING_expression.out)
