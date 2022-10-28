@@ -128,6 +128,10 @@ workflow {
             LOO_atac(params.meta, ATAC_FILTERING_expression.out)
             LOO_ATAC_PROCESS_covariates(ID_ch, LOO_meta_csv.out.collect(), LOO_atac.out.collect())
             LOO_ATAC_SPLIT_chromosome( ID_ch.combine(chrom_list_ch), LOO_atac_vcf.out, LOO_atac.out)
+
+            LOO_ATAC_PREPROCESS_rasqual( ID_ch.combine(chrom_list_ch), LOO_ATAC_SPLIT_chromosome.out.collect(), params.genome)
+
+
         }
     }
 
@@ -159,6 +163,10 @@ workflow {
             LOO_rna(params.meta, RNA_FILTERING_expression.out)
             LOO_RNA_PROCESS_covariates(ID_ch, LOO_meta_csv.out.collect(), LOO_rna.out.collect())
             LOO_RNA_SPLIT_chromosome(ID_ch.combine(chrom_list_ch), LOO_rna_vcf.out, LOO_rna.out)
+            
+            LOO_RNA_PREPROCESS_rasqual( ID_ch.combine(chrom_list_ch), LOO_RNA_SPLIT_chromosome.out.collect(), params.genome)
+
+
         }
         
     }
@@ -985,28 +993,30 @@ process LOO_RNA_SPLIT_chromosome {
 
 process LOO_ATAC_PREPROCESS_rasqual {
     container 'ndatth/rasqual:v0.0.0'
-    publishDir "${params.outdir}/ATAC_qtl_input", mode: 'symlink', overwrite: true
+    publishDir "${params.outdir}/loo_ATAC_qtl_input", mode: 'symlink', overwrite: true
     memory '64 GB'
     cpus 8
 
     input:
-    val chr
+    tuple val(ID), val (chr)
     path split_chrom
     path genome
 
     output:
-    tuple path("${chr}_atac.exp.bin"), path("${chr}_atac.exp.txt"), path("${chr}_atac.size_factors.bin"), path("${chr}_atac.size_factors.txt"), path("${chr}_snp_counts.tsv")
+    tuple path("${ID}_${chr}_atac.exp.bin"), path("${ID}_${chr}_atac.exp.txt"), path("${ID}_${chr}_atac.size_factors.bin"), path("${ID}_${chr}_atac.size_factors.txt"), path("${ID}_${chr}_snp_counts.tsv")
 
 
     script:
     """
-    ATAC_rasqual_processor.R ${chr}_count.txt ${chr}.vcf.gz $genome $params.atac_window ${task.cpus}
+
+    ATAC_rasqual_processor.R ${ID}_${chr}_count.txt ${ID}_${chr}.vcf.gz $genome $params.atac_window ${task.cpus}
     ## rename files
-    mv atac.exp.bin ${chr}_atac.exp.bin
-    mv atac.exp.txt ${chr}_atac.exp.txt
-    mv atac.size_factors.bin ${chr}_atac.size_factors.bin
-    mv atac.size_factors.txt ${chr}_atac.size_factors.txt
-    mv snp_counts.tsv ${chr}_snp_counts.tsv
+    mv atac.exp.bin ${ID}_${chr}_atac.exp.bin
+    mv atac.exp.txt ${ID}_${chr}_atac.exp.txt
+    mv atac.size_factors.bin ${ID}_${chr}_atac.size_factors.bin
+    mv atac.size_factors.txt ${ID}_${chr}_atac.size_factors.txt
+    mv snp_counts.tsv ${ID}_${chr}_snp_counts.tsv
+
     """
 }
 
@@ -1014,28 +1024,30 @@ process LOO_ATAC_PREPROCESS_rasqual {
 
 process LOO_RNA_PREPROCESS_rasqual {
     container 'ndatth/rasqual:v0.0.0'
-    publishDir "${params.outdir}/RNA_qtl_input", mode: 'symlink', overwrite: true
+    publishDir "${params.outdir}/loo_RNA_qtl_input", mode: 'symlink', overwrite: true
     memory '64 GB'
     cpus 8
 
     input:
-    val chr
+    tuple val(ID), val (chr)
     path split_chrom
     path genome
 
     output:
-    tuple path("${chr}_rna.exp.bin"), path("${chr}_rna.exp.txt"), path("${chr}_rna.size_factors.bin"), path("${chr}_rna.size_factors.txt"), path("${chr}_snp_counts.tsv")
+    tuple path("${ID}_${chr}_rna.exp.bin"), path("${ID}_${chr}_rna.exp.txt"), path("${ID}_${chr}_rna.size_factors.bin"), path("${ID}_${chr}_rna.size_factors.txt"), path("${ID}_${chr}_snp_counts.tsv")
 
 
     script:
     """
-    RNA_rasqual_processor.R ${chr}_count.txt ${chr}.vcf.gz $genome $params.eqtl_window ${task.cpus}
+
+    RNA_rasqual_processor.R ${ID}_${chr}_count.txt ${ID}_${chr}.vcf.gz $genome $params.eqtl_window ${task.cpus}
     ## rename files
-    mv rna.exp.bin ${chr}_rna.exp.bin
-    mv rna.exp.txt ${chr}_rna.exp.txt
-    mv rna.size_factors.bin ${chr}_rna.size_factors.bin
-    mv rna.size_factors.txt ${chr}_rna.size_factors.txt
-    mv snp_counts.tsv ${chr}_snp_counts.tsv
+    mv rna.exp.bin ${ID}_${chr}_rna.exp.bin
+    mv rna.exp.txt ${ID}_${chr}_rna.exp.txt
+    mv rna.size_factors.bin ${ID}_${chr}_rna.size_factors.bin
+    mv rna.size_factors.txt ${ID}_${chr}_rna.size_factors.txt
+    mv snp_counts.tsv ${ID}_${chr}_snp_counts.tsv
+
     """
 }
 
