@@ -939,7 +939,7 @@ process LOO_ATAC_SPLIT_chromosome {
 
     script:
     """
-    awk 'NR==1{print }' $in_exp > ${ID}_${chr}_count.txt
+    awk 'NR==1{print }' ${ID}_atac_count.txt > ${ID}_${chr}_count.txt
     awk -v chr=$chr '{ if (\$2 == $chr) { print } }' ${ID}_atac_count.txt >> ${ID}_${chr}_count.txt
 
     bcftools view ${ID}_loo.vcf.gz --regions ${chr} -Oz -o ${ID}_${chr}.vcf.gz
@@ -963,8 +963,8 @@ process LOO_RNA_SPLIT_chromosome {
 
     script:
     """
-    awk 'NR==1{print }' $in_exp > ${ID}_${chr}_count.txt
-    awk -v chr=$chr '{ if (\$2 == $chr) { print } }' ${ID}_atac_count.txt >> ${ID}_${chr}_count.txt
+    awk 'NR==1{print }' ${ID}_rna_count.txt > ${ID}_${chr}_count.txt
+    awk -v chr=$chr '{ if (\$2 == $chr) { print } }' ${ID}_rna_count.txt >> ${ID}_${chr}_count.txt
 
     bcftools view ${ID}_loo.vcf.gz --regions ${chr} -Oz -o ${ID}_${chr}.vcf.gz
     bcftools index -t ${ID}_${chr}.vcf.gz
