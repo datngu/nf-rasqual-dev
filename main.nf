@@ -959,7 +959,7 @@ process LOO_RNA_SPLIT_chromosome {
     path in_exp
 
     output:
-    tuple path("${chr}.vcf.gz"), path("${chr}.vcf.gz.tbi"), path("${chr}_count.txt")
+    tuple path("${ID}_${chr}.vcf.gz"), path("${ID}_${chr}.vcf.gz.tbi"), path("${ID}_${chr}_count.txt")
 
     script:
     """
