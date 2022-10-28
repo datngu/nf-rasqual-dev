@@ -91,7 +91,7 @@ workflow {
         LOO_meta_csv(params.meta)
         LOO_get_sample_ID(params.meta)
         LOO_get_sample_ID2(LOO_get_sample_ID.out)
-        LOO_get_sample_ID2.view()
+        LOO_get_sample_ID2.out.view()
     }
 
     // ATAC QTL
