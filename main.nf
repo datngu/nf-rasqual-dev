@@ -91,7 +91,6 @@ workflow {
         ID_ch = LOO_meta_csv.out.map{ infile -> tuple( infile.baseName) }.flatten()
         ID_ch.view()
 
-        chrom_list_ch.view()
         //LOO_get_sample_ID(params.meta)
         //LOO_get_sample_ID.out.buffer(size:1).view()
         //LOO_get_sample_ID.out.view()
@@ -127,7 +126,7 @@ workflow {
         if(params.loo){
             LOO_atac_vcf(params.meta, ATAC_ADD_AS_vcf.out)
             LOO_atac(params.meta, ATAC_FILTERING_expression.out)
-            //LOO_ATAC_PROCESS_covariates(LOO_get_sample_ID2.out, LOO_meta_csv.out.collect(), LOO_atac.out.collect())
+            LOO_ATAC_PROCESS_covariates(ID_ch, LOO_meta_csv.out.collect(), LOO_atac.out.collect())
         }
     }
 
@@ -157,7 +156,7 @@ workflow {
         if(params.loo){
             LOO_rna_vcf(params.meta, RNA_ADD_AS_vcf.out)
             LOO_rna(params.meta, RNA_FILTERING_expression.out)
-            //LOO_RNA_PROCESS_covariates(LOO_get_sample_ID2.out, LOO_meta_csv.out.collect(), LOO_rna.out.collect())
+            LOO_RNA_PROCESS_covariates(ID_ch, LOO_meta_csv.out.collect(), LOO_rna.out.collect())
         }
         
     }
@@ -790,44 +789,6 @@ process LOO_meta_csv {
     """
 }
 
-process LOO_get_sample_ID {
-
-    container 'ndatth/rasqual:v0.0.0'
-    publishDir "${params.outdir}/loo_meta", mode: 'symlink', overwrite: true
-    memory '8 GB'
-
-    input:
-    path meta
-
-    output:
-    path "tem/*"
-
-    script:
-    """
-    loo_get_sampleID.R $meta
-    """
-}
-
-
-process LOO_get_sample_ID2 {
-
-    container 'ndatth/rasqual:v0.0.0'
-    publishDir "${params.outdir}/loo_meta", mode: 'symlink', overwrite: true
-    memory '8 GB'
-
-    input:
-    path loo_meta
-
-    output:
-    val "${loo_meta}"
-
-    script:
-    """
-    ## do nothing
-    """
-}
-
-
 process LOO_atac {
 
     container 'ndatth/rasqual:v0.0.0'
@@ -927,7 +888,7 @@ process LOO_ATAC_PROCESS_covariates {
 
     script:
     """
-    ATAC_covariates.R ${ID}_meta.csv ${ID}_atac_count.txt $params.phenotype_PCs
+    ATAC_covariates.R ${ID}.csv ${ID}_atac_count.txt $params.phenotype_PCs
 
     mv atac.covs_all_chrom.bin ${ID}_atac.covs_all_chrom.bin
     mv atac.covs_all_chrom.txt ${ID}_atac.covs_all_chrom.txt
@@ -950,7 +911,7 @@ process LOO_RNA_PROCESS_covariates {
 
     script:
     """
-    RNA_covariates.R ${ID}_meta.csv ${ID}_rna_count.txt $params.phenotype_PCs
+    RNA_covariates.R ${ID}.csv ${ID}_rna_count.txt $params.phenotype_PCs
 
     mv rna.covs_all_chrom.bin ${ID}_rna.covs_all_chrom.bin
     mv rna.covs_all_chrom.txt ${ID}_rna.covs_all_chrom.txt
