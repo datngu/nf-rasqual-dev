@@ -89,6 +89,8 @@ workflow {
     // Leave one out implementation
     if(params.loo){
         LOO_meta_csv(params.meta)
+        loo_sample_ch = channel.fromPath(LOO_meta_csv.out)
+        loo_sample_ch.view()
     }
 
     // ATAC QTL
@@ -149,6 +151,7 @@ workflow {
             LOO_rna_vcf(params.meta, RNA_ADD_AS_vcf.out)
             LOO_rna(params.meta, RNA_FILTERING_expression.out)
         }
+        
     }
 }
 
@@ -779,6 +782,23 @@ process LOO_meta_csv {
     """
 }
 
+process LOO_get_sample_ch {
+
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/loo_meta", mode: 'symlink', overwrite: true
+    memory '8 GB'
+
+    input:
+    path loo_meta
+
+    output:
+    val "*_meta.csv"
+
+    script:
+    """
+    loo_meta.R $meta
+    """
+}
 
 
 process LOO_atac {
