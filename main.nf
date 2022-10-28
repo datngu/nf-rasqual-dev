@@ -127,6 +127,7 @@ workflow {
             LOO_atac_vcf(params.meta, ATAC_ADD_AS_vcf.out)
             LOO_atac(params.meta, ATAC_FILTERING_expression.out)
             LOO_ATAC_PROCESS_covariates(ID_ch, LOO_meta_csv.out.collect(), LOO_atac.out.collect())
+            LOO_ATAC_SPLIT_chromosome( ID_ch.combine(chrom_list_ch), LOO_atac_vcf.out, LOO_atac.out)
         }
     }
 
@@ -157,6 +158,7 @@ workflow {
             LOO_rna_vcf(params.meta, RNA_ADD_AS_vcf.out)
             LOO_rna(params.meta, RNA_FILTERING_expression.out)
             LOO_RNA_PROCESS_covariates(ID_ch, LOO_meta_csv.out.collect(), LOO_rna.out.collect())
+            LOO_RNA_SPLIT_chromosome(ID_ch.combine(chrom_list_ch), LOO_rna_vcf.out, LOO_rna.out)
         }
         
     }
@@ -924,7 +926,31 @@ process LOO_RNA_PROCESS_covariates {
 
 process LOO_ATAC_SPLIT_chromosome {
     container 'ndatth/rasqual:v0.0.0'
-    publishDir "${params.outdir}/ATAC_split_chrom", mode: 'symlink', overwrite: true
+    publishDir "${params.outdir}/loo_ATAC_split_chrom", mode: 'symlink', overwrite: true
+    memory '8 GB'
+
+    input:
+    tuple val(ID), val (chr)
+    path in_vcf
+    path in_exp
+
+    output:
+    tuple path("${ID}_${chr}.vcf.gz"), path("${ID}_${chr}.vcf.gz.tbi"), path("${ID}_${chr}_count.txt")
+
+    script:
+    """
+    awk 'NR==1{print }' $in_exp > ${ID}_${chr}_count.txt
+    awk -v chr=$chr '{ if (\$2 == $chr) { print } }' ${ID}_atac_count.txt >> ${ID}_${chr}_count.txt
+
+    bcftools view ${ID}_loo.vcf.gz --regions ${chr} -Oz -o ${ID}_${chr}.vcf.gz
+    bcftools index -t ${ID}_${chr}.vcf.gz
+    """
+}
+
+
+process LOO_RNA_SPLIT_chromosome {
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/loo_RNA_split_chrom", mode: 'symlink', overwrite: true
     memory '8 GB'
 
     input:
@@ -937,35 +963,11 @@ process LOO_ATAC_SPLIT_chromosome {
 
     script:
     """
-    awk 'NR==1{print }' $in_exp > ${chr}_count.txt
-    awk -v chr=$chr '{ if (\$2 == $chr) { print } }' $in_exp >> ${chr}_count.txt
+    awk 'NR==1{print }' $in_exp > ${ID}_${chr}_count.txt
+    awk -v chr=$chr '{ if (\$2 == $chr) { print } }' ${ID}_atac_count.txt >> ${ID}_${chr}_count.txt
 
-    bcftools view processed.vcf.gz --regions $chr -Oz -o ${chr}.vcf.gz
-    bcftools index -t ${chr}.vcf.gz
-    """
-}
-
-
-process LOO_RNA_SPLIT_chromosome {
-    container 'ndatth/rasqual:v0.0.0'
-    publishDir "${params.outdir}/RNA_split_chrom", mode: 'symlink', overwrite: true
-    memory '8 GB'
-
-    input:
-    val chr
-    path in_vcf
-    path in_exp
-
-    output:
-    tuple path("${chr}.vcf.gz"), path("${chr}.vcf.gz.tbi"), path("${chr}_count.txt")
-
-    script:
-    """
-    awk 'NR==1{print }' $in_exp > ${chr}_count.txt
-    awk -v chr=$chr '{ if (\$2 == $chr) { print } }' $in_exp >> ${chr}_count.txt
-    
-    bcftools view processed.vcf.gz --regions $chr -Oz -o ${chr}.vcf.gz
-    bcftools index -t ${chr}.vcf.gz
+    bcftools view ${ID}_loo.vcf.gz --regions ${chr} -Oz -o ${ID}_${chr}.vcf.gz
+    bcftools index -t ${ID}_${chr}.vcf.gz
     """
 }
 
