@@ -649,7 +649,7 @@ process RNA_RUN_rasqual_permutation {
 
 process ATAC_MERGE_rasqual_permutation {
     container 'ndatth/rasqual:v0.0.0'
-    publishDir "${params.outdir}/ATAC_results_rasqual_permutaion", mode: 'symlink', overwrite: true
+    publishDir "${params.outdir}/ATAC_results_rasqual_permutaion_merged", mode: 'symlink', overwrite: true
     memory '8 GB'
     cpus 1
 
@@ -675,7 +675,7 @@ process ATAC_MERGE_rasqual_permutation {
 
 process RNA_MERGE_rasqual_permutation {
     container 'ndatth/rasqual:v0.0.0'
-    publishDir "${params.outdir}/RNA_results_rasqual_permutaion", mode: 'symlink', overwrite: true
+    publishDir "${params.outdir}/RNA_results_rasqual_permutaion_merged", mode: 'symlink', overwrite: true
     memory '8 GB'
     cpus 1
 
