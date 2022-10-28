@@ -88,9 +88,8 @@ workflow {
     // Leave one out implementation
     if(params.loo){
         LOO_meta_csv(params.meta)
-        ID_ch = LOO_meta_csv.out.map{ infile -> tuple( infile.baseName) }
+        ID_ch = LOO_meta_csv.out.map{ infile -> tuple( infile.baseName) }.flatten()
         ID_ch.view()
-        ID_ch.buffer(size:1).view()
 
         chrom_list_ch.view()
         //LOO_get_sample_ID(params.meta)
