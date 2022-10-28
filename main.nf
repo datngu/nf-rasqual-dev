@@ -90,7 +90,9 @@ workflow {
     if(params.loo){
         LOO_meta_csv(params.meta)
         LOO_get_sample_ID(params.meta)
-        LOO_get_sample_ID2(LOO_get_sample_ID.out.collate(1))
+        LOO_get_sample_ID.out.buffer(size:1).view()
+        LOO_get_sample_ID.out.view()
+        LOO_get_sample_ID2(LOO_get_sample_ID.out.buffer(size:1))
         LOO_get_sample_ID2.out.view()
     }
 
