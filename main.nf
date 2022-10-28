@@ -89,7 +89,9 @@ workflow {
     // Leave one out implementation
     if(params.loo){
         LOO_meta_csv(params.meta)
-        LOO_meta_csv.out.map{ infile -> tuple( infile.baseName, infile ) }.view()
+        ID_ch = LOO_meta_csv.out.map{ infile -> tuple( infile.baseName) }
+        ID_ch.view()
+        ID_ch.buffer(size:1).view()
         //LOO_get_sample_ID(params.meta)
         //LOO_get_sample_ID.out.buffer(size:1).view()
         //LOO_get_sample_ID.out.view()
