@@ -793,7 +793,7 @@ process LOO_get_sample_ID {
     path meta
 
     output:
-    val "*_meta.csv"
+    path "tem/*"
 
     script:
     """

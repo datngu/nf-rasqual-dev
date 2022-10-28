@@ -15,6 +15,7 @@ if(length(args) < 1 ){
 meta_fn = args[1]
 
 require(data.table)
+dir.create("tem")
 # meta_fn = "data/meta/Brain.csv"
 
 # meta
@@ -25,7 +26,7 @@ meta = as.data.frame(meta)
 for(i in 1:nrow(meta)){
     genotype_id = meta$genotype_id[i]
     meta_tem = meta[-i,]
-    out_meta = genotype_id
+    out_meta = paste0("tem/",genotype_id)
     fwrite(meta_tem, out_meta, sep = "\t")
 }
 
