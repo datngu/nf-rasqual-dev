@@ -89,8 +89,9 @@ workflow {
     // Leave one out implementation
     if(params.loo){
         LOO_meta_csv(params.meta)
-        loo_sample_ch = channel.fromPath(LOO_meta_csv.out)
-        loo_sample_ch.view()
+        LOO_get_sample_ID(params.meta)
+        LOO_get_sample_ID2(LOO_get_sample_ID.out)
+        LOO_get_sample_ID2.view()
     }
 
     // ATAC QTL
@@ -782,7 +783,7 @@ process LOO_meta_csv {
     """
 }
 
-process LOO_get_sample_ch {
+process LOO_get_sample_ID {
 
     container 'ndatth/rasqual:v0.0.0'
     publishDir "${params.outdir}/loo_meta", mode: 'symlink', overwrite: true
@@ -796,7 +797,26 @@ process LOO_get_sample_ch {
 
     script:
     """
-    loo_meta.R $meta
+    loo_get_sampleID.R $meta
+    """
+}
+
+
+process LOO_get_sample_ID2 {
+
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/loo_meta", mode: 'symlink', overwrite: true
+    memory '8 GB'
+
+    input:
+    path loo_meta
+
+    output:
+    val "${loo_meta}"
+
+    script:
+    """
+    ## do nothing
     """
 }
 
