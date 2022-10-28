@@ -83,7 +83,6 @@ workflow {
     // channel general processing
     chrom_list_ch = channel.from(params.chrom)
     permute_ch = channel.from(params.permute)
-    //chrom_list_ch.collect().toList().view()
     VCF_filtering(params.genotype, params.meta)
 
     // Leave one out implementation
@@ -92,6 +91,8 @@ workflow {
         ID_ch = LOO_meta_csv.out.map{ infile -> tuple( infile.baseName) }
         ID_ch.view()
         ID_ch.buffer(size:1).view()
+
+        chrom_list_ch.view()
         //LOO_get_sample_ID(params.meta)
         //LOO_get_sample_ID.out.buffer(size:1).view()
         //LOO_get_sample_ID.out.view()
