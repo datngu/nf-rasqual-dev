@@ -21,11 +21,12 @@ require(data.table)
 meta = fread(meta_fn, header = T)
 meta = as.data.frame(meta)
 
+dir.create("tem")
 
 for(i in 1:nrow(meta)){
     genotype_id = meta$genotype_id[i]
     meta_tem = meta[-i,]
-    out_meta = paste0(genotype_id, "_meta.csv", sep = "")
+    out_meta = paste0("tem/", genotype_id, ".csv", sep = "")
     fwrite(meta_tem, out_meta, sep = "\t")
 }
 

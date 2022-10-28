@@ -89,11 +89,12 @@ workflow {
     // Leave one out implementation
     if(params.loo){
         LOO_meta_csv(params.meta)
-        LOO_get_sample_ID(params.meta)
-        LOO_get_sample_ID.out.buffer(size:1).view()
-        LOO_get_sample_ID.out.view()
-        LOO_get_sample_ID2(LOO_get_sample_ID.out.buffer(size:1))
-        LOO_get_sample_ID2.out.view()
+        LOO_meta_csv.out.map{ infile -> tuple( infile.baseName, infile ) }.view()
+        //LOO_get_sample_ID(params.meta)
+        //LOO_get_sample_ID.out.buffer(size:1).view()
+        //LOO_get_sample_ID.out.view()
+        //LOO_get_sample_ID2(LOO_get_sample_ID.out.buffer(size:1))
+        //LOO_get_sample_ID2.out.view()
     }
 
     // ATAC QTL
@@ -779,7 +780,7 @@ process LOO_meta_csv {
     path meta
 
     output:
-    path "*_meta.csv"
+    path "tem/*"
 
     script:
     """
