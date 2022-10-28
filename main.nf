@@ -790,7 +790,7 @@ process LOO_get_sample_ID {
     memory '8 GB'
 
     input:
-    path loo_meta
+    path meta
 
     output:
     val "*_meta.csv"
