@@ -1160,7 +1160,7 @@ process LOO_RNA_MERGE_rasqual {
 
 process LOO_ATAC_RUN_rasqual_permutation {
     container 'ndatth/rasqual:v0.0.0'
-    publishDir "${params.outdir}/ATAC_results_rasqual_permutaion", mode: 'symlink', overwrite: true
+    publishDir "${params.outdir}/loo_ATAC_results_rasqual_permutaion", mode: 'symlink', overwrite: true
     memory '64 GB'
     cpus 16
 
@@ -1187,7 +1187,7 @@ process LOO_ATAC_RUN_rasqual_permutation {
 
 process LOO_RNA_RUN_rasqual_permutation {
     container 'ndatth/rasqual:v0.0.0'
-    publishDir "${params.outdir}/RNA_results_rasqual_permutaion", mode: 'symlink', overwrite: true
+    publishDir "${params.outdir}/loo_RNA_results_rasqual_permutaion", mode: 'symlink', overwrite: true
     memory '64 GB'
     cpus 16
 
