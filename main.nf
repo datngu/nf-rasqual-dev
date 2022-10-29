@@ -126,6 +126,9 @@ workflow {
 
             LOO_ATAC_PREPROCESS_rasqual( ID_ch.combine(chrom_list_ch), LOO_ATAC_SPLIT_chromosome.out.collect(), params.genome)
 
+            LOO_ATAC_RUN_rasqual(ID_ch.combine(chrom_list_ch), LOO_ATAC_PREPROCESS_rasqual.out.collect(), LOO_ATAC_SPLIT_chromosome.out.collect(), LOO_ATAC_PROCESS_covariates.out.collect())
+
+            LOO_ATAC_RUN_rasqual_permutation(ID_ch.combine(chrom_list_ch), LOO_ATAC_PREPROCESS_rasqual.out.collect(), LOO_ATAC_SPLIT_chromosome.out.collect(), LOO_ATAC_PROCESS_covariates.out.collect())
 
         }
     }
@@ -161,7 +164,10 @@ workflow {
             LOO_RNA_SPLIT_chromosome(ID_ch.combine(chrom_list_ch), LOO_rna_vcf.out, LOO_rna.out)
             
             LOO_RNA_PREPROCESS_rasqual( ID_ch.combine(chrom_list_ch), LOO_RNA_SPLIT_chromosome.out.collect(), params.genome)
+            
+            LOO_RNA_RUN_rasqual(ID_ch.combine(chrom_list_ch), LOO_RNA_PREPROCESS_rasqual.out.collect(), LOO_RNA_SPLIT_chromosome.out.collect(), LOO_RNA_PROCESS_covariates.out.collect())
 
+            LOO_RNA_RUN_rasqual_permutation(ID_ch.combine(chrom_list_ch), LOO_RNA_PREPROCESS_rasqual.out.collect(), LOO_RNA_SPLIT_chromosome.out.collect(), LOO_RNA_PROCESS_covariates.out.collect())
 
         }
         
