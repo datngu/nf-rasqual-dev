@@ -133,6 +133,9 @@ workflow {
             // merge results
             LOO_ATAC_MERGE_rasqual(chrom_list_ch.max(), LOO_ATAC_RUN_rasqual.out.groupTuple())
             LOO_ATAC_MERGE_rasqual_permutation(chrom_list_ch.max(), LOO_ATAC_RUN_rasqual_permutation.out.groupTuple())
+
+            // emp pvalues
+            LOO_ATAC_COMPUTE_rasqual_emperical_pvalues(LOO_ATAC_MERGE_rasqual.out, LOO_ATAC_MERGE_rasqual_permutation.out.collect())
         }
     }
 
@@ -175,6 +178,9 @@ workflow {
             // merge results
             LOO_RNA_MERGE_rasqual(chrom_list_ch.max(), LOO_RNA_RUN_rasqual.out.groupTuple())
             LOO_RNA_MERGE_rasqual_permutation(chrom_list_ch.max(), LOO_RNA_RUN_rasqual_permutation.out.groupTuple())
+
+            // emp pvalues
+            LOO_RNA_COMPUTE_rasqual_emperical_pvalues(LOO_RNA_MERGE_rasqual.out, LOO_RNA_MERGE_rasqual_permutation.out.collect())
         }
         
     }
@@ -1125,7 +1131,7 @@ process LOO_ATAC_MERGE_rasqual {
     tuple val(ID), path(rasqual_results)
 
     output:
-    path("${ID}_all_chromosome_rasqual_lead_snp.txt")
+    tuple val("${ID}"),path("${ID}_all_chromosome_rasqual_lead_snp.txt")
 
 
     script:
@@ -1149,7 +1155,7 @@ process LOO_RNA_MERGE_rasqual {
     tuple val(ID), path(rasqual_results)
 
     output:
-    path("${ID}_all_chromosome_rasqual_lead_snp.txt")
+    tuple val("${ID}"), path("${ID}_all_chromosome_rasqual_lead_snp.txt")
 
 
     script:
@@ -1268,5 +1274,50 @@ process LOO_RNA_MERGE_rasqual_permutation {
     do
         cat ${ID}_\${chr}_permute_rasqual_lead_snp.txt >> ${ID}_permute_all_chromosome_rasqual_lead_snp.txt
     done
+    """
+}
+
+
+// LOO compute rasqual emperical pvalues
+
+
+process LOO_ATAC_COMPUTE_rasqual_emperical_pvalues {
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/loo_ATAC_results_emperical_pvalues", mode: 'symlink', overwrite: true
+    memory '8 GB'
+    cpus 1
+
+    input:
+    tuple val(ID), path(merged_results)
+    path permuation_merged_results
+
+    output:
+    path("${ID}_rasqual_emperical_pvalues.txt")
+
+
+    script:
+    """
+    rasqual_emperical_pvalues.R ${ID}_rasqual_emperical_pvalues.txt $merged_results $permuation_merged_results
+    """
+}
+
+
+process LOO_RNA_COMPUTE_rasqual_emperical_pvalues {
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/loo_RNA_results_emperical_pvalues", mode: 'symlink', overwrite: true
+    memory '8 GB'
+    cpus 1
+
+    input:
+    tuple val(ID), path(merged_results)
+    path permuation_merged_results
+
+    output:
+    path("${ID}_rasqual_emperical_pvalues.txt")
+
+
+    script:
+    """
+    rasqual_emperical_pvalues.R ${ID}_rasqual_emperical_pvalues.txt $merged_results $permuation_merged_results
     """
 }
