@@ -125,11 +125,14 @@ workflow {
             LOO_ATAC_SPLIT_chromosome( ID_ch.combine(chrom_list_ch), LOO_atac_vcf.out, LOO_atac.out)
 
             LOO_ATAC_PREPROCESS_rasqual( ID_ch.combine(chrom_list_ch), LOO_ATAC_SPLIT_chromosome.out.collect(), params.genome)
-
+            // run rasqual 
             LOO_ATAC_RUN_rasqual(ID_ch.combine(chrom_list_ch), LOO_ATAC_PREPROCESS_rasqual.out.collect(), LOO_ATAC_SPLIT_chromosome.out.collect(), LOO_ATAC_PROCESS_covariates.out.collect())
-
+            // run rasqual permutation
             LOO_ATAC_RUN_rasqual_permutation(ID_ch.combine(chrom_list_ch), LOO_ATAC_PREPROCESS_rasqual.out.collect(), LOO_ATAC_SPLIT_chromosome.out.collect(), LOO_ATAC_PROCESS_covariates.out.collect())
-
+            
+            // merge results
+            LOO_ATAC_MERGE_rasqual(chrom_list_ch.max(), LOO_ATAC_RUN_rasqual.out.collect())
+            LOO_ATAC_MERGE_rasqual_permutation(chrom_list_ch.max(), LOO_ATAC_RUN_rasqual_permutation.out.collect())
         }
     }
 
@@ -164,11 +167,14 @@ workflow {
             LOO_RNA_SPLIT_chromosome(ID_ch.combine(chrom_list_ch), LOO_rna_vcf.out, LOO_rna.out)
             
             LOO_RNA_PREPROCESS_rasqual( ID_ch.combine(chrom_list_ch), LOO_RNA_SPLIT_chromosome.out.collect(), params.genome)
-            
+            // run rasqual
             LOO_RNA_RUN_rasqual(ID_ch.combine(chrom_list_ch), LOO_RNA_PREPROCESS_rasqual.out.collect(), LOO_RNA_SPLIT_chromosome.out.collect(), LOO_RNA_PROCESS_covariates.out.collect())
-
+            // run rasqual permutation
             LOO_RNA_RUN_rasqual_permutation(ID_ch.combine(chrom_list_ch), LOO_RNA_PREPROCESS_rasqual.out.collect(), LOO_RNA_SPLIT_chromosome.out.collect(), LOO_RNA_PROCESS_covariates.out.collect())
-
+            
+            // merge results
+            LOO_RNA_MERGE_rasqual(chrom_list_ch.max(), LOO_RNA_RUN_rasqual.out.collect())
+            LOO_RNA_MERGE_rasqual_permutation(chrom_list_ch.max(), LOO_RNA_RUN_rasqual_permutation.out.collect())
         }
         
     }
