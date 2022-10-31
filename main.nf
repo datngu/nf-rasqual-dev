@@ -132,7 +132,7 @@ workflow {
             
             // merge results
             LOO_ATAC_MERGE_rasqual(chrom_list_ch.max(), LOO_ATAC_RUN_rasqual.out.groupTuple())
-            LOO_ATAC_MERGE_rasqual_permutation(ID_ch, chrom_list_ch.max(), LOO_ATAC_RUN_rasqual_permutation.out.groupTuple())
+            LOO_ATAC_MERGE_rasqual_permutation(chrom_list_ch.max(), LOO_ATAC_RUN_rasqual_permutation.out.groupTuple())
         }
     }
 
