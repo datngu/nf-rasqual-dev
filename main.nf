@@ -131,8 +131,8 @@ workflow {
             LOO_ATAC_RUN_rasqual_permutation(ID_ch.combine(chrom_list_ch), LOO_ATAC_PREPROCESS_rasqual.out.collect(), LOO_ATAC_SPLIT_chromosome.out.collect(), LOO_ATAC_PROCESS_covariates.out.collect())
             
             // merge results
-            LOO_ATAC_MERGE_rasqual(chrom_list_ch.max(), LOO_ATAC_RUN_rasqual.out.collect())
-            LOO_ATAC_MERGE_rasqual_permutation(chrom_list_ch.max(), LOO_ATAC_RUN_rasqual_permutation.out.collect())
+            LOO_ATAC_MERGE_rasqual(ID_ch, chrom_list_ch.max(), LOO_ATAC_RUN_rasqual.out.collect())
+            LOO_ATAC_MERGE_rasqual_permutation(ID_ch, chrom_list_ch.max(), LOO_ATAC_RUN_rasqual_permutation.out.collect())
         }
     }
 
@@ -173,8 +173,8 @@ workflow {
             LOO_RNA_RUN_rasqual_permutation(ID_ch.combine(chrom_list_ch), LOO_RNA_PREPROCESS_rasqual.out.collect(), LOO_RNA_SPLIT_chromosome.out.collect(), LOO_RNA_PROCESS_covariates.out.collect())
             
             // merge results
-            LOO_RNA_MERGE_rasqual(chrom_list_ch.max(), LOO_RNA_RUN_rasqual.out.collect())
-            LOO_RNA_MERGE_rasqual_permutation(chrom_list_ch.max(), LOO_RNA_RUN_rasqual_permutation.out.collect())
+            LOO_RNA_MERGE_rasqual(ID_ch, chrom_list_ch.max(), LOO_RNA_RUN_rasqual.out.collect())
+            LOO_RNA_MERGE_rasqual_permutation(ID_ch, chrom_list_ch.max(), LOO_RNA_RUN_rasqual_permutation.out.collect())
         }
         
     }
@@ -1121,8 +1121,9 @@ process LOO_ATAC_MERGE_rasqual {
     cpus 1
 
     input:
+    val ID
     val max_chr
-    tuple val(ID), path(rasqual_results)
+    tuple val(tem_id), path(rasqual_results)
 
     output:
     path("${ID}_all_chromosome_rasqual_lead_snp.txt")
@@ -1145,8 +1146,10 @@ process LOO_RNA_MERGE_rasqual {
     cpus 1
 
     input:
+    val ID
     val max_chr
-    tuple val(ID), path(rasqual_results)
+    tuple val(tem_id), path(rasqual_results)
+
     output:
     path("${ID}_all_chromosome_rasqual_lead_snp.txt")
 
@@ -1227,8 +1230,9 @@ process LOO_ATAC_MERGE_rasqual_permutation {
     cpus 1
 
     input:
+    val ID
     val max_chr
-    tuple val(ID), path(rasqual_results)
+    tuple val(tem_id), path(rasqual_results)
     
 
     output:
@@ -1253,8 +1257,9 @@ process LOO_RNA_MERGE_rasqual_permutation {
     cpus 1
 
     input:
+    val ID
     val max_chr
-    tuple val(ID), path(rasqual_results)
+    tuple val(tem_id), path(rasqual_results)
     
 
     output:
