@@ -173,8 +173,8 @@ workflow {
             LOO_RNA_RUN_rasqual_permutation(ID_ch.combine(chrom_list_ch), LOO_RNA_PREPROCESS_rasqual.out.collect(), LOO_RNA_SPLIT_chromosome.out.collect(), LOO_RNA_PROCESS_covariates.out.collect())
             
             // merge results
-            LOO_RNA_MERGE_rasqual(chrom_list_ch.max(), LOO_RNA_RUN_rasqualout.groupTuple())
-            LOO_RNA_MERGE_rasqual_permutation(chrom_list_ch.max(), LOO_RNA_RUN_rasqual_permutationout.groupTuple())
+            LOO_RNA_MERGE_rasqual(chrom_list_ch.max(), LOO_RNA_RUN_rasqual.out.groupTuple())
+            LOO_RNA_MERGE_rasqual_permutation(chrom_list_ch.max(), LOO_RNA_RUN_rasqual_permutation.out.groupTuple())
         }
         
     }
