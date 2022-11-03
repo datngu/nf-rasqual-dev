@@ -26,7 +26,7 @@ nextflow run main.nf -resume --atac_bam $atac_bam --atac_count $atac_count --gen
 
 
 ########### debugs
-# singularity build /mnt/SCRATCH/ngda/nf-rasqual/shared_dir/singularity/ndatth-rasqual-v0.0.0.img docker://ndatth/rasqual:v0.0.0
+# singularity build ./ndatth-rasqual-v0.0.0.img docker://ndatth/rasqual:v0.0.0
 
 # singularity run /mnt/SCRATCH/ngda/nf-rasqual/shared_dir/singularity/ndatth-rasqual-v0.0.0.img
 
