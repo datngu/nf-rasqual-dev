@@ -15,7 +15,7 @@ parser.add_argument("--rasqualOut", help = "Path to the merged RASQUAL output fi
 args = parser.parse_args()
 
 rasqual_file = open(args.rasqualOut)
-print "\t".join(["snps","gene","statistic","pvalue","FDR","beta"])
+print ("\t".join(["snps","gene","statistic","pvalue","FDR","beta"]))
 for line in rasqual_file:
 	line = line.rstrip()
 	fields = line.split("\t")
