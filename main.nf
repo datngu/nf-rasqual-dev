@@ -117,6 +117,10 @@ workflow {
         
         ATAC_COMPUTE_rasqual_emperical_pvalues(ATAC_MERGE_rasqual.out.collect(), ATAC_MERGE_rasqual_permutation.out.collect())
 
+        // eigenMT
+        ATAC_RUN_rasqual_eigenMT(chrom_list_ch, ATAC_PREPROCESS_rasqual.out.collect(), ATAC_SPLIT_chromosome.out.collect(), ATAC_PROCESS_covariates.out)
+        ATAC_MERGE_rasqual_eigenMT(chrom_list_ch.max(), ATAC_RUN_rasqual_eigenMT.out.collect())
+
         // Leave one out implementation
         if(params.loo){
             LOO_atac_vcf(params.meta, ATAC_ADD_AS_vcf.out)
@@ -1321,3 +1325,112 @@ process LOO_RNA_COMPUTE_rasqual_emperical_pvalues {
     rasqual_emperical_pvalues.R ${ID}_rasqual_emperical_pvalues.txt $merged_results $permuation_merged_results
     """
 }
+
+
+
+// eigenMT rasqual runnning
+
+
+// QTL mapping with rasqual
+
+process ATAC_RUN_rasqual_eigenMT {
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/ATAC_results_rasqual_eigenMT", mode: 'symlink', overwrite: true
+    memory '64 GB'
+    cpus 16
+
+    input:
+    val chr
+    path preproces_data
+    path split_chrom
+    path covariates
+
+    output:
+    path("${chr}_rasqual_lead_snp.txt")
+
+
+    script:
+    """
+    echo \$HOSTNAME
+    rasqual_eigenMT.R vcf=${chr}.vcf.gz y=${chr}_atac.exp.bin k=${chr}_atac.size_factors.bin x=atac.covs_all_chrom.bin x_txt=atac.covs_all_chrom.txt meta=${chr}_snp_counts.tsv out=${chr}_rasqual_lead_snp.txt cpu=${task.cpus}
+    """
+}
+
+
+process RNA_RUN_rasqual_eigenMT {
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/RNA_results_rasqual_eigenMT", mode: 'symlink', overwrite: true
+    memory '64 GB'
+    cpus 16
+
+    input:
+    val chr
+    path preproces_data
+    path split_chrom
+    path covariates
+
+    output:
+    path("${chr}_rasqual_lead_snp.txt")
+
+
+    script:
+    """
+    echo \$HOSTNAME
+    rasqual_eigenMT.R vcf=${chr}.vcf.gz y=${chr}_rna.exp.bin k=${chr}_rna.size_factors.bin x=rna.covs_all_chrom.bin x_txt=rna.covs_all_chrom.txt meta=${chr}_snp_counts.tsv out=${chr}_rasqual_lead_snp.txt cpu=${task.cpus}
+    """
+}
+
+
+
+
+
+// merge rasqual results
+
+
+process ATAC_MERGE_rasqual_eigenMT {
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/ATAC_results_rasqual_merged_eigenMT", mode: 'symlink', overwrite: true
+    memory '8 GB'
+    cpus 1
+
+    input:
+    val max_chr
+    path rasqual_results
+
+    output:
+    path("all_chromosome_rasqual_lead_snp.txt")
+
+
+    script:
+    """
+    for chr in \$(seq 1 $max_chr)
+    do
+        cat \${chr}_rasqual_lead_snp.txt >> all_chromosome_rasqual_lead_snp.txt
+    done
+    """
+}
+
+
+process RNA_MERGE_rasqual_eigenMT {
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/RNA_results_rasqual_merged_eigenMT", mode: 'symlink', overwrite: true
+    memory '8 GB'
+    cpus 1
+
+    input:
+    val max_chr
+    path rasqual_results
+
+    output:
+    path("all_chromosome_rasqual_lead_snp.txt")
+
+
+    script:
+    """
+    for chr in \$(seq 1 $max_chr)
+    do
+        cat \${chr}_rasqual_lead_snp.txt >> all_chromosome_rasqual_lead_snp.txt
+    done
+    """
+}
+
