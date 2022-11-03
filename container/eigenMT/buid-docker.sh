@@ -1,19 +1,19 @@
 ## BUILD DOCKER AUTOMATICLY
-docker build -t eigen_mt:v0.0.0 -f Dockerfile .
+docker build -t eigenmt:v0.0.0 -f Dockerfile .
 
 # v0.0.0
-docker tag eigen_mt:v0.0.0 ndatth/eigen_mt:v0.0.0
-docker push ndatth/eigen_mt:v0.0.0
+docker tag eigenmt:v0.0.0 ndatth/eigenmt:v0.0.0
+docker push ndatth/eigenmt:v0.0.0
 echo DONE
 
 
 ### test docker
 
-docker run -it --rm -v /sigma4:/sigma4 --name eigen_mt ndatth/eigen_mt:v0.0.0
-docker start atac
-docker attach atac
+docker run -it --rm -v /sigma4:/sigma4 --name eigenmt ndatth/eigenmt:v0.0.0
+docker start eigenmt
+docker attach eigenmt
 
 
 ######## manually
 
-docker run -it --rm -v /sigma4:/sigma4 --name eigen_mt nfcore/base:2.1
+docker run -it --rm -v /sigma4:/sigma4 --name eigenmt nfcore/base:2.1

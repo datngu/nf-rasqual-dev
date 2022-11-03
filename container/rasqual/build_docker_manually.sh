@@ -103,10 +103,20 @@ R -e "install.packages('data.table', repos='http://cran.us.r-project.org')"
 R -e "install.packages('doParallel', repos='http://cran.us.r-project.org')"
 R -e "install.packages('foreach', repos='http://cran.us.r-project.org')"
 
-# install pandas
+# eigenMT
+# python3 
 apt-get -y install python3-pip
 pip3 install pandas
+pip3 install scipy
+pip3 install scikit-learn
+pip3 install numpy
 
+# python2
+apt-get -y install python-pip
+pip install pandas
+pip install scipy
+pip install scikit-learn
+pip install numpy
 
 
 

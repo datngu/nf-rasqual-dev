@@ -22,7 +22,11 @@ RUN apt-get update && apt-get install -y \
  
 
 ADD bin/eigenMT.py /usr/bin/
-ADD environment.yml /
-RUN conda install mamba -n base -c conda-forge -y
-RUN mamba env create -f /environment.yml
-ENV PATH /opt/conda/envs/eigen_mt/bin:$PATH
+#ADD environment.yml /
+#RUN conda install mamba -n base -c conda-forge -y
+#RUN mamba env create -f /environment.yml
+#ENV PATH /opt/conda/envs/eigen_mt/bin:$PATH
+RUN pip3 install numpy
+RUN pip3 install pandas
+RUN pip3 install scipy
+RUN pip3 install scikit-learn
