@@ -11,7 +11,7 @@ import subprocess
 from scipy import stats
 
 parser = argparse.ArgumentParser(description = "Convert RASQUAL output into a format suitable for eigenMT. Extract relevant columns and convert chisq statistic into p-value", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument("--rasqualOut", help = "Path to the merged RASQUAL output file (genrated by mergeRasqualBatches.py).")
+parser.add_argument("--rasqualOut", help = "Path to the merged RASQUAL output file (original).")
 args = parser.parse_args()
 
 rasqual_file = open(args.rasqualOut)

@@ -43,7 +43,7 @@ params.eqtl_window     = 250000
 // pipeline options
 params.atac_qtl          = true
 params.eqtl_qtl          = true
-params.loo               = true
+params.loo               = false
 
 
 log.info """\
@@ -119,7 +119,10 @@ workflow {
 
         // eigenMT
         ATAC_RUN_rasqual_eigenMT(chrom_list_ch, ATAC_PREPROCESS_rasqual.out.collect(), ATAC_SPLIT_chromosome.out.collect(), ATAC_PROCESS_covariates.out)
-        ATAC_MERGE_rasqual_eigenMT(chrom_list_ch.max(), ATAC_RUN_rasqual_eigenMT.out.collect())
+        
+        ATAC_rasqual_TO_eigenMT(chrom_list_ch, ATAC_RUN_rasqual_eigenMT.out.collect())
+        
+        //ATAC_MERGE_rasqual_eigenMT(chrom_list_ch.max(), ATAC_RUN_rasqual_eigenMT.out.collect())
 
         // Leave one out implementation
         if(params.loo){
@@ -1381,6 +1384,52 @@ process RNA_RUN_rasqual_eigenMT {
 }
 
 
+// convert to eigenMT input
+
+// QTL mapping with rasqual
+
+process ATAC_rasqual_TO_eigenMT {
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/ATAC_results_rasqual_eigenMT_processed", mode: 'symlink', overwrite: true
+    memory '64 GB'
+    cpus 16
+
+    input:
+    val chr
+    path rasqual_res
+
+    output:
+    path("${chr}_formated_EigenMT.txt")
+
+
+    script:
+    """
+    echo \$HOSTNAME
+    rasqualToEigenMT.py --rasqualOut ${chr}_rasqual_lead_snp.txt > ${chr}_formated_EigenMT.txt
+    """
+}
+
+
+process RNA_rasqual_TO_eigenMT {
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/RNA_results_rasqual_eigenMT_processed", mode: 'symlink', overwrite: true
+    memory '64 GB'
+    cpus 16
+
+    input:
+    val chr
+    path rasqual_res
+
+    output:
+    path("${chr}_formated_EigenMT.txt")
+
+
+    script:
+    """
+    echo \$HOSTNAME
+    rasqualToEigenMT.py --rasqualOut ${chr}_rasqual_lead_snp.txt > ${chr}_formated_EigenMT.txt
+    """
+}
 
 
 
