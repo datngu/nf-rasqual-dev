@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-## credit:
+
+# ## credit:
 ## from Kauralasoo: https://github.com/kauralasoo/rasqual/blob/master/scripts/rasqualToEigenMT.py
 
 import sys
@@ -11,7 +12,7 @@ import subprocess
 from scipy import stats
 
 parser = argparse.ArgumentParser(description = "Convert RASQUAL output into a format suitable for eigenMT. Extract relevant columns and convert chisq statistic into p-value", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument("--rasqualOut", help = "Path to the merged RASQUAL output file (original).")
+parser.add_argument("--rasqualOut", help = "Path to the merged RASQUAL output file (oringal).")
 args = parser.parse_args()
 
 rasqual_file = open(args.rasqualOut)
