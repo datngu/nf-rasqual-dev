@@ -23,7 +23,7 @@ for l in fi:
     tokens = l.split("\t")
     if tokens[0] == "#CHROM":
         l1 = "\t".join(tokens[2:3] + tokens[9:])
-        l1 = l1 + "\n"
+        #l1 = l1 + "\n"
         fout_gen.writelines(l1)
         l2 =  "\t".join(["snp", "chr_snp", "pos"])
         l2 = l2 + "\n"
