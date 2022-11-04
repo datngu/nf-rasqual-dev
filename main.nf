@@ -224,6 +224,7 @@ process VCF_filtering {
     """
     # in_vcf=genotype.vcf.gz
     # meta=meta/brain.csv
+    bcftools index -t $in_vcf
     grep -v ^genotype_id ${meta} | cut -d , -f 1 > genotype_sample.txt
     bcftools view $in_vcf -S genotype_sample.txt | sed 's/chr//g' | bgzip > genotype_filtered.vcf.gz
     """
