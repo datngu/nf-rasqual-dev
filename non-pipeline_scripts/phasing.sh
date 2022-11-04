@@ -44,16 +44,18 @@ done
 
 for i in {1..29}
 do
-    echo vcf_phased/ssa${i}_added_GP.vcf.gz >> file_list.txt
+    #echo vcf_phased/ssa${i}_added_GP.vcf.gz >> file_list.txt
 done
 
 bcftools concat -n -f file_list.txt -Oz -o all_chr_added_GP.vcf.gz
 
-fai=/mnt/users/ngda/genomes/atlantic_salmon/Salmo_salar.Ssal_v3.1.dna_sm.toplevel.fa.fai
+# fai=/mnt/users/ngda/genomes/atlantic_salmon/Salmo_salar.Ssal_v3.1.dna_sm.toplevel.fa.fai
 
-bcftools reheader --fai $fai all_chr_added_GP.vcf.gz | bcftools sort -Oz > sorted_all_chr_added_GP.vcf.gz
-bftools index -t sorted_all_chr_added_GP.vcf.gz
+# bcftools reheader --fai $fai all_chr_added_GP.vcf.gz | bcftools sort -Oz > sorted_all_chr_added_GP.vcf.gz
+# bftools index -t sorted_all_chr_added_GP.vcf.gz
 
-bftools index -t sorted_all_chr_added_GP.vcf.gz
+# bftools index -t sorted_all_chr_added_GP.vcf.gz
 
-zcat sorted_all_chr_added_GP.vcf.gz | sed 's/ssa0//g' | sed 's/ssa//g' | bgzip > processed_all_chrom.vcf.gz
+zcat all_chr_added_GP.vcf.gz | sed 's/ssa0//g' | sed 's/ssa//g' | bgzip > processed_all_chrom.vcf.gz
+
+bftools index -t processed_all_chrom.vcf.gz

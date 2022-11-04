@@ -18,7 +18,6 @@
  Define the default parameters
 */ 
 params.genome          = "$baseDir/data/ref/genome.fa"
-params.cdna            = "$baseDir/data/ref/cdna.fa"
 params.annotation      = "$baseDir/data/ref/annotation.gtf"
 params.atac_bam        = "$baseDir/data/atac_bam/*.bam"
 params.atac_count      = "$baseDir/data/atac_consensus_peak_featureCounts.txt"
@@ -31,7 +30,7 @@ params.trace_dir       = "trace_dir"
 
 // running options
 params.chrom           = 1..29 
-params.permute         = 1..11
+params.permute         = 1..12
 params.phenotype_PCs   = 2 
 params.exp_prop        = 0.5
 params.fpkm_cutoff     = 0.5
@@ -41,9 +40,14 @@ params.atac_window     = 10000
 params.eqtl_window     = 250000
 
 // pipeline options
+
 params.atac_qtl          = true
 params.eqtl_qtl          = true
 params.loo               = false
+// control for FDR
+params.eigenMT_fdr       = true
+params.permute_fdr       = false
+
 
 
 log.info """\
@@ -51,7 +55,6 @@ log.info """\
                         nf-rasqual
 ================================================================
     genome              : $params.genome
-    cdna                : $params.cdna
     annotation          : $params.annotation
     atac_bam            : $params.atac_bam
     atac_count          : $params.atac_count
@@ -89,7 +92,6 @@ workflow {
     if(params.loo){
         LOO_meta_csv(params.meta)
         ID_ch = LOO_meta_csv.out.map{ infile -> tuple( infile.baseName) }.flatten()
-        //ID_ch.view()
     }
 
     // ATAC QTL
@@ -102,27 +104,26 @@ workflow {
         ATAC_PROCESS_covariates(params.meta, ATAC_FILTERING_expression.out)
         ATAC_SPLIT_chromosome(chrom_list_ch, ATAC_ADD_AS_vcf.out, ATAC_FILTERING_expression.out )
         ATAC_PREPROCESS_rasqual(chrom_list_ch, ATAC_SPLIT_chromosome.out.collect(), params.genome)
-
-        ATAC_RUN_rasqual(chrom_list_ch, ATAC_PREPROCESS_rasqual.out.collect(), ATAC_SPLIT_chromosome.out.collect(), ATAC_PROCESS_covariates.out)
-
-        ATAC_rasqual_permutation_input_ch = chrom_list_ch.combine(permute_ch)
-        //ATAC_rasqual_permutation_input_ch.view()
-        ATAC_RUN_rasqual_permutation(ATAC_rasqual_permutation_input_ch, ATAC_PREPROCESS_rasqual.out.collect(), ATAC_SPLIT_chromosome.out.collect(), ATAC_PROCESS_covariates.out)
-
-
-        ATAC_MERGE_rasqual(chrom_list_ch.max(), ATAC_RUN_rasqual.out.collect())
-
-        //ATAC_RUN_rasqual_permutation.out.groupTuple().view()
-        ATAC_MERGE_rasqual_permutation(chrom_list_ch.max(), ATAC_RUN_rasqual_permutation.out.groupTuple())
         
-        ATAC_COMPUTE_rasqual_emperical_pvalues(ATAC_MERGE_rasqual.out.collect(), ATAC_MERGE_rasqual_permutation.out.collect())
+        // FDR by eigenMT
+        if(params.eigenMT_fdr){
+            ATAC_RUN_rasqual_eigenMT(chrom_list_ch, ATAC_PREPROCESS_rasqual.out.collect(), ATAC_SPLIT_chromosome.out.collect(), ATAC_PROCESS_covariates.out)
 
-        // eigenMT
-        ATAC_RUN_rasqual_eigenMT(chrom_list_ch, ATAC_PREPROCESS_rasqual.out.collect(), ATAC_SPLIT_chromosome.out.collect(), ATAC_PROCESS_covariates.out)
+            ATAC_rasqual_TO_eigenMT(chrom_list_ch, ATAC_RUN_rasqual_eigenMT.out.collect())
+            //ATAC_MERGE_rasqual_eigenMT(chrom_list_ch.max(), ATAC_RUN_rasqual_eigenMT.out.collect())
+        }
         
-        ATAC_rasqual_TO_eigenMT(chrom_list_ch, ATAC_RUN_rasqual_eigenMT.out.collect())
-        
-        //ATAC_MERGE_rasqual_eigenMT(chrom_list_ch.max(), ATAC_RUN_rasqual_eigenMT.out.collect())
+        // FDR by permuataion
+        if(params.permute_fdr){
+            ATAC_RUN_rasqual(chrom_list_ch, ATAC_PREPROCESS_rasqual.out.collect(), ATAC_SPLIT_chromosome.out.collect(), ATAC_PROCESS_covariates.out)
+            ATAC_MERGE_rasqual(chrom_list_ch.max(), ATAC_RUN_rasqual.out.collect())
+            // run permuataion
+            ATAC_rasqual_permutation_input_ch = chrom_list_ch.combine(permute_ch)
+            ATAC_RUN_rasqual_permutation(ATAC_rasqual_permutation_input_ch, ATAC_PREPROCESS_rasqual.out.collect(), ATAC_SPLIT_chromosome.out.collect(), ATAC_PROCESS_covariates.out)
+            ATAC_MERGE_rasqual_permutation(chrom_list_ch.max(), ATAC_RUN_rasqual_permutation.out.groupTuple())
+            ATAC_COMPUTE_rasqual_emperical_pvalues(ATAC_MERGE_rasqual.out.collect(), ATAC_MERGE_rasqual_permutation.out.collect())
+        }
+    
 
         // Leave one out implementation
         if(params.loo){
@@ -135,14 +136,14 @@ workflow {
             // run rasqual 
             LOO_ATAC_RUN_rasqual(ID_ch.combine(chrom_list_ch), LOO_ATAC_PREPROCESS_rasqual.out.collect(), LOO_ATAC_SPLIT_chromosome.out.collect(), LOO_ATAC_PROCESS_covariates.out.collect())
             // run rasqual permutation
-            LOO_ATAC_RUN_rasqual_permutation(ID_ch.combine(chrom_list_ch), LOO_ATAC_PREPROCESS_rasqual.out.collect(), LOO_ATAC_SPLIT_chromosome.out.collect(), LOO_ATAC_PROCESS_covariates.out.collect())
+            //LOO_ATAC_RUN_rasqual_permutation(ID_ch.combine(chrom_list_ch), LOO_ATAC_PREPROCESS_rasqual.out.collect(), LOO_ATAC_SPLIT_chromosome.out.collect(), LOO_ATAC_PROCESS_covariates.out.collect())
             
             // merge results
             LOO_ATAC_MERGE_rasqual(chrom_list_ch.max(), LOO_ATAC_RUN_rasqual.out.groupTuple())
-            LOO_ATAC_MERGE_rasqual_permutation(chrom_list_ch.max(), LOO_ATAC_RUN_rasqual_permutation.out.groupTuple())
+            //LOO_ATAC_MERGE_rasqual_permutation(chrom_list_ch.max(), LOO_ATAC_RUN_rasqual_permutation.out.groupTuple())
 
             // emp pvalues
-            LOO_ATAC_COMPUTE_rasqual_emperical_pvalues(LOO_ATAC_MERGE_rasqual.out, LOO_ATAC_MERGE_rasqual_permutation.out.collect())
+            //LOO_ATAC_COMPUTE_rasqual_emperical_pvalues(LOO_ATAC_MERGE_rasqual.out, LOO_ATAC_MERGE_rasqual_permutation.out.collect())
         }
     }
 
@@ -157,18 +158,27 @@ workflow {
         RNA_PROCESS_covariates(params.meta, RNA_FILTERING_expression.out)
         RNA_SPLIT_chromosome(chrom_list_ch, RNA_ADD_AS_vcf.out, RNA_FILTERING_expression.out )
         RNA_PREPROCESS_rasqual(chrom_list_ch, RNA_SPLIT_chromosome.out.collect(), params.genome)
-
-        RNA_RUN_rasqual(chrom_list_ch, RNA_PREPROCESS_rasqual.out.collect(), RNA_SPLIT_chromosome.out.collect(), RNA_PROCESS_covariates.out)
-
-        RNA_rasqual_permutation_input_ch = chrom_list_ch.combine(permute_ch)
-        RNA_RUN_rasqual_permutation(RNA_rasqual_permutation_input_ch, RNA_PREPROCESS_rasqual.out.collect(), RNA_SPLIT_chromosome.out.collect(), RNA_PROCESS_covariates.out)
-
-        RNA_MERGE_rasqual(chrom_list_ch.max(), RNA_RUN_rasqual.out.collect())
-
-        //RNA_RUN_rasqual_permutation.out.groupTuple().view()
-        RNA_MERGE_rasqual_permutation(chrom_list_ch.max(), RNA_RUN_rasqual_permutation.out.groupTuple())
-        RNA_COMPUTE_rasqual_emperical_pvalues(RNA_MERGE_rasqual.out.collect(), RNA_MERGE_rasqual_permutation.out.collect())
         
+        // FDR by eigenMT
+        if(params.eigenMT_fdr){
+            RNA_RUN_rasqual_eigenMT(chrom_list_ch, RNA_PREPROCESS_rasqual.out.collect(), RNA_SPLIT_chromosome.out.collect(), RNA_PROCESS_covariates.out)
+
+            RNA_rasqual_TO_eigenMT(chrom_list_ch, RNA_RUN_rasqual_eigenMT.out.collect())
+            //RNA_MERGE_rasqual_eigenMT(chrom_list_ch.max(), RNA_RUN_rasqual_eigenMT.out.collect())
+        }
+        
+        // FDR by permuataion
+        if(params.permute_fdr){
+            RNA_RUN_rasqual(chrom_list_ch, RNA_PREPROCESS_rasqual.out.collect(), RNA_SPLIT_chromosome.out.collect(), RNA_PROCESS_covariates.out)
+            RNA_MERGE_rasqual(chrom_list_ch.max(), RNA_RUN_rasqual.out.collect())
+
+            RNA_rasqual_permutation_input_ch = chrom_list_ch.combine(permute_ch)
+            RNA_RUN_rasqual_permutation(RNA_rasqual_permutation_input_ch, RNA_PREPROCESS_rasqual.out.collect(), RNA_SPLIT_chromosome.out.collect(), RNA_PROCESS_covariates.out)
+            RNA_MERGE_rasqual_permutation(chrom_list_ch.max(), RNA_RUN_rasqual_permutation.out.groupTuple())
+
+            RNA_COMPUTE_rasqual_emperical_pvalues(RNA_MERGE_rasqual.out.collect(), RNA_MERGE_rasqual_permutation.out.collect())
+        }
+
         // Leave one out implementation
         if(params.loo){
             LOO_rna_vcf(params.meta, RNA_ADD_AS_vcf.out)
@@ -1006,9 +1016,6 @@ process LOO_RNA_SPLIT_chromosome {
 
 
 
-
-
-
 // proprocessing
 
 
@@ -1349,13 +1356,13 @@ process ATAC_RUN_rasqual_eigenMT {
     path covariates
 
     output:
-    path("${chr}_rasqual_lead_snp.txt")
+    path("${chr}_rasqual_all_snp.txt")
 
 
     script:
     """
     echo \$HOSTNAME
-    rasqual_eigenMT.R vcf=${chr}.vcf.gz y=${chr}_atac.exp.bin k=${chr}_atac.size_factors.bin x=atac.covs_all_chrom.bin x_txt=atac.covs_all_chrom.txt meta=${chr}_snp_counts.tsv out=${chr}_rasqual_lead_snp.txt cpu=${task.cpus}
+    rasqual_eigenMT.R vcf=${chr}.vcf.gz y=${chr}_atac.exp.bin k=${chr}_atac.size_factors.bin x=atac.covs_all_chrom.bin x_txt=atac.covs_all_chrom.txt meta=${chr}_snp_counts.tsv out=${chr}_rasqual_all_snp.txt cpu=${task.cpus}
     """
 }
 
@@ -1373,20 +1380,19 @@ process RNA_RUN_rasqual_eigenMT {
     path covariates
 
     output:
-    path("${chr}_rasqual_lead_snp.txt")
+    path("${chr}_rasqual_all_snp.txt")
 
 
     script:
     """
     echo \$HOSTNAME
-    rasqual_eigenMT.R vcf=${chr}.vcf.gz y=${chr}_rna.exp.bin k=${chr}_rna.size_factors.bin x=rna.covs_all_chrom.bin x_txt=rna.covs_all_chrom.txt meta=${chr}_snp_counts.tsv out=${chr}_rasqual_lead_snp.txt cpu=${task.cpus}
+    rasqual_eigenMT.R vcf=${chr}.vcf.gz y=${chr}_rna.exp.bin k=${chr}_rna.size_factors.bin x=rna.covs_all_chrom.bin x_txt=rna.covs_all_chrom.txt meta=${chr}_snp_counts.tsv out=${chr}_rasqual_all_snp.txt cpu=${task.cpus}
     """
 }
 
 
 // convert to eigenMT input
 
-// QTL mapping with rasqual
 
 process ATAC_rasqual_TO_eigenMT {
     container 'ndatth/rasqual:v0.0.0'
@@ -1405,7 +1411,7 @@ process ATAC_rasqual_TO_eigenMT {
     script:
     """
     echo \$HOSTNAME
-    rasqualToEigenMT.py --rasqualOut ${chr}_rasqual_lead_snp.txt > ${chr}_formated_EigenMT.txt
+    rasqualToEigenMT.py --rasqualOut ${chr}_rasqual_all_snp.txt > ${chr}_formated_EigenMT.txt
     """
 }
 
@@ -1427,7 +1433,7 @@ process RNA_rasqual_TO_eigenMT {
     script:
     """
     echo \$HOSTNAME
-    rasqualToEigenMT.py --rasqualOut ${chr}_rasqual_lead_snp.txt > ${chr}_formated_EigenMT.txt
+    rasqualToEigenMT.py --rasqualOut ${chr}_rasqual_all_snp.txt > ${chr}_formated_EigenMT.txt
     """
 }
 
