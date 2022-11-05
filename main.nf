@@ -1561,7 +1561,7 @@ process RNA_eigenMT {
 
 process ATAC_MERGE_eigenMT {
     container 'ndatth/rasqual:v0.0.0'
-    publishDir "${params.outdir}/ATAC_eigenMT_results_merged", mode: 'symlink', overwrite: true
+    publishDir "${params.outdir}/ATAC_eigenMT_results_merged", mode: 'copy', overwrite: true
     memory '8 GB'
     cpus 1
 
@@ -1588,7 +1588,7 @@ process ATAC_MERGE_eigenMT {
 
 process RNA_MERGE_eigenMT {
     container 'ndatth/rasqual:v0.0.0'
-    publishDir "${params.outdir}/RNA_eigenMT_results_merged", mode: 'symlink', overwrite: true
+    publishDir "${params.outdir}/RNA_eigenMT_results_merged", mode: 'copy', overwrite: true
     memory '8 GB'
     cpus 1
 
