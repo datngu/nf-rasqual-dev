@@ -1519,7 +1519,7 @@ process ATAC_eigenMT {
 	    --GEN ${chr}_genotype.txt \
 	    --GENPOS ${chr}_genotype_position.txt \
 	    --PHEPOS ${chr}_phenotype_position.txt \
-        --cisDist ${params.atac_window} \
+        --cis_dist ${params.atac_window} \
 	    --OUT ${chr}_eigenMT_results.txt
 
     """
@@ -1548,7 +1548,7 @@ process RNA_eigenMT {
 	    --GEN ${chr}_genotype.txt \
 	    --GENPOS ${chr}_genotype_position.txt \
 	    --PHEPOS ${chr}_phenotype_position.txt \
-        --cisDist ${params.eqtl_window} \
+        --cis_dist ${params.eqtl_window} \
 	    --OUT ${chr}_eigenMT_results.txt
 
     """
