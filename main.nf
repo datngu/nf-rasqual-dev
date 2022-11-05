@@ -107,15 +107,26 @@ workflow {
         
         // FDR by eigenMT
         if(params.eigenMT_fdr){
+
+            ATAC_eigenMT_process_input(chrom_list_ch, ATAC_SPLIT_chromosome.out.collect())
+
             ATAC_RUN_rasqual_eigenMT(chrom_list_ch, ATAC_PREPROCESS_rasqual.out.collect(), ATAC_SPLIT_chromosome.out.collect(), ATAC_PROCESS_covariates.out)
 
             ATAC_rasqual_TO_eigenMT(chrom_list_ch, ATAC_RUN_rasqual_eigenMT.out.collect())
 
-            ATAC_eigenMT_process_input(chrom_list_ch, ATAC_SPLIT_chromosome.out.collect())
-
             ATAC_eigenMT(chrom_list_ch, ATAC_rasqual_TO_eigenMT.out.collect(), ATAC_eigenMT_process_input.out.collect())
 
             ATAC_MERGE_eigenMT(chrom_list_ch.max(), ATAC_eigenMT.out.collect())
+
+            // permutation
+
+            ATAC_RUN_rasqual_eigenMT_permute(chrom_list_ch, ATAC_PREPROCESS_rasqual.out.collect(), ATAC_SPLIT_chromosome.out.collect(), ATAC_PROCESS_covariates.out)
+
+            ATAC_rasqual_TO_eigenMT_permute(chrom_list_ch, ATAC_RUN_rasqual_eigenMT_permute.out.collect())
+
+            ATAC_eigenMT_permute(chrom_list_ch, ATAC_rasqual_TO_eigenMT_permute.out.collect(), ATAC_eigenMT_process_input.out.collect())
+
+            ATAC_MERGE_eigenMT_permute(chrom_list_ch.max(), ATAC_eigenMT_permute.out.collect())
         }
         
         // FDR by permuataion
@@ -175,6 +186,16 @@ workflow {
             RNA_eigenMT(chrom_list_ch, RNA_rasqual_TO_eigenMT.out.collect(), RNA_eigenMT_process_input.out.collect())
 
             RNA_MERGE_eigenMT(chrom_list_ch.max(), RNA_eigenMT.out.collect())
+
+            // permutation
+
+            RNA_RUN_rasqual_eigenMT_permute(chrom_list_ch, RNA_PREPROCESS_rasqual.out.collect(), RNA_SPLIT_chromosome.out.collect(), RNA_PROCESS_covariates.out)
+
+            RNA_rasqual_TO_eigenMT_permute(chrom_list_ch, RNA_RUN_rasqual_eigenMT_permute.out.collect())
+
+            RNA_eigenMT_permute(chrom_list_ch, RNA_rasqual_TO_eigenMT_permute.out.collect(), RNA_eigenMT_process_input.out.collect())
+
+            RNA_MERGE_eigenMT_permute(chrom_list_ch.max(), RNA_eigenMT_permute.out.collect())
         }
         
         // FDR by permuataion
@@ -1352,7 +1373,53 @@ process LOO_RNA_COMPUTE_rasqual_emperical_pvalues {
 // eigenMT rasqual runnning
 
 
-// QTL mapping with rasqual
+process ATAC_eigenMT_process_input {
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/ATAC_eigenMT_process_input", mode: 'symlink', overwrite: true
+    memory '8 GB'
+
+    input:
+    val chr
+    path split_chrom
+
+    output:
+    tuple path("${chr}_genotype.txt"), path("${chr}_genotype_position.txt"), path("${chr}_phenotype_position.txt")
+
+    script:
+    """
+    MatrixQTL_genotype_converter.py --vcf ${chr}.vcf.gz --out_genotype ${chr}_genotype.txt --out_genotype_position ${chr}_genotype_position.txt
+
+    MatrixQTL_ATAC_phenotype_converter.py --count ${chr}_count.txt --out_phenotype ${chr}_phenotype.txt --out_phenotype_position ${chr}_phenotype_position.txt
+
+    """
+}
+
+
+
+process RNA_eigenMT_process_input {
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/RNA_eigenMT_process_input", mode: 'symlink', overwrite: true
+    memory '8 GB'
+
+    input:
+    val chr
+    path split_chrom
+
+    output:
+    tuple path("${chr}_genotype.txt"), path("${chr}_genotype_position.txt"), path("${chr}_phenotype_position.txt")
+
+    script:
+    """
+    MatrixQTL_genotype_converter.py --vcf ${chr}.vcf.gz --out_genotype ${chr}_genotype.txt --out_genotype_position ${chr}_genotype_position.txt
+
+    MatrixQTL_RNA_phenotype_converter.py --count ${chr}_count.txt --out_phenotype ${chr}_phenotype.txt --out_phenotype_position ${chr}_phenotype_position.txt
+
+    """
+}
+
+
+
+// run rasqual eigenMT
 
 process ATAC_RUN_rasqual_eigenMT {
     container 'ndatth/rasqual:v0.0.0'
@@ -1398,6 +1465,58 @@ process RNA_RUN_rasqual_eigenMT {
     """
     echo \$HOSTNAME
     rasqual_eigenMT.R vcf=${chr}.vcf.gz y=${chr}_rna.exp.bin k=${chr}_rna.size_factors.bin x=rna.covs_all_chrom.bin x_txt=rna.covs_all_chrom.txt meta=${chr}_snp_counts.tsv out=${chr}_rasqual_all_snp.txt cpu=${task.cpus}
+    """
+}
+
+
+
+// permuatation sample
+
+
+process ATAC_RUN_rasqual_eigenMT_permute {
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/ATAC_results_rasqual_eigenMT_permute", mode: 'symlink', overwrite: true
+    memory '64 GB'
+    cpus 16
+
+    input:
+    val chr
+    path preproces_data
+    path split_chrom
+    path covariates
+
+    output:
+    path("${chr}_rasqual_all_snp.txt")
+
+
+    script:
+    """
+    echo \$HOSTNAME
+    rasqual_permute_eigenMT.R vcf=${chr}.vcf.gz y=${chr}_atac.exp.bin k=${chr}_atac.size_factors.bin x=atac.covs_all_chrom.bin x_txt=atac.covs_all_chrom.txt meta=${chr}_snp_counts.tsv out=${chr}_rasqual_all_snp.txt cpu=${task.cpus}
+    """
+}
+
+
+process RNA_RUN_rasqual_eigenMT_permute {
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/RNA_results_rasqual_eigenMT_permute", mode: 'symlink', overwrite: true
+    memory '64 GB'
+    cpus 16
+
+    input:
+    val chr
+    path preproces_data
+    path split_chrom
+    path covariates
+
+    output:
+    path("${chr}_rasqual_all_snp.txt")
+
+
+    script:
+    """
+    echo \$HOSTNAME
+    rasqual_permute_eigenMT.R vcf=${chr}.vcf.gz y=${chr}_rna.exp.bin k=${chr}_rna.size_factors.bin x=rna.covs_all_chrom.bin x_txt=rna.covs_all_chrom.txt meta=${chr}_snp_counts.tsv out=${chr}_rasqual_all_snp.txt cpu=${task.cpus}
     """
 }
 
@@ -1449,48 +1568,49 @@ process RNA_rasqual_TO_eigenMT {
 }
 
 
+// permuate
 
-process ATAC_eigenMT_process_input {
+
+process ATAC_rasqual_TO_eigenMT_permute {
     container 'ndatth/rasqual:v0.0.0'
-    publishDir "${params.outdir}/ATAC_eigenMT_process_input", mode: 'symlink', overwrite: true
-    memory '8 GB'
+    publishDir "${params.outdir}/ATAC_results_rasqual_eigenMT_processed_permute", mode: 'symlink', overwrite: true
+    memory '64 GB'
+    cpus 16
 
     input:
     val chr
-    path split_chrom
+    path rasqual_res
 
     output:
-    tuple path("${chr}_genotype.txt"), path("${chr}_genotype_position.txt"), path("${chr}_phenotype_position.txt")
+    path("${chr}_formated_EigenMT.txt")
+
 
     script:
     """
-    MatrixQTL_genotype_converter.py --vcf ${chr}.vcf.gz --out_genotype ${chr}_genotype.txt --out_genotype_position ${chr}_genotype_position.txt
-
-    MatrixQTL_ATAC_phenotype_converter.py --count ${chr}_count.txt --out_phenotype ${chr}_phenotype.txt --out_phenotype_position ${chr}_phenotype_position.txt
-
+    echo \$HOSTNAME
+    rasqualToEigenMT.py --rasqualOut ${chr}_rasqual_all_snp.txt > ${chr}_formated_EigenMT.txt
     """
 }
 
 
-
-process RNA_eigenMT_process_input {
+process RNA_rasqual_TO_eigenMT_permute {
     container 'ndatth/rasqual:v0.0.0'
-    publishDir "${params.outdir}/RNA_eigenMT_process_input", mode: 'symlink', overwrite: true
-    memory '8 GB'
+    publishDir "${params.outdir}/RNA_results_rasqual_eigenMT_processed_permute", mode: 'symlink', overwrite: true
+    memory '64 GB'
+    cpus 16
 
     input:
     val chr
-    path split_chrom
+    path rasqual_res
 
     output:
-    tuple path("${chr}_genotype.txt"), path("${chr}_genotype_position.txt"), path("${chr}_phenotype_position.txt")
+    path("${chr}_formated_EigenMT.txt")
+
 
     script:
     """
-    MatrixQTL_genotype_converter.py --vcf ${chr}.vcf.gz --out_genotype ${chr}_genotype.txt --out_genotype_position ${chr}_genotype_position.txt
-
-    MatrixQTL_RNA_phenotype_converter.py --count ${chr}_count.txt --out_phenotype ${chr}_phenotype.txt --out_phenotype_position ${chr}_phenotype_position.txt
-
+    echo \$HOSTNAME
+    rasqualToEigenMT.py --rasqualOut ${chr}_rasqual_all_snp.txt > ${chr}_formated_EigenMT.txt
     """
 }
 
@@ -1555,6 +1675,65 @@ process RNA_eigenMT {
 }
 
 
+// permuate
+
+
+process ATAC_eigenMT_permute {
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/ATAC_eigenMT_results_permute", mode: 'symlink', overwrite: true
+    memory '8 GB'
+
+    input:
+    val chr
+    path rasqual_eigenMT
+    path all_input
+
+    output:
+    path("${chr}_eigenMT_results.txt")
+
+    script:
+    """
+
+    eigenMT.py --CHROM ${chr} \
+	    --QTL ${chr}_formated_EigenMT.txt \
+	    --GEN ${chr}_genotype.txt \
+	    --GENPOS ${chr}_genotype_position.txt \
+	    --PHEPOS ${chr}_phenotype_position.txt \
+        --cis_dist ${params.atac_window} \
+	    --OUT ${chr}_eigenMT_results.txt
+
+    """
+}
+
+
+
+process RNA_eigenMT_permute {
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/RNA_eigenMT_results_permute", mode: 'symlink', overwrite: true
+    memory '8 GB'
+
+    input:
+    val chr
+    path rasqual_eigenMT
+    path all_input
+
+    output:
+    path("${chr}_eigenMT_results.txt")
+
+    script:
+    """
+    
+    eigenMT.py --CHROM ${chr} \
+	    --QTL ${chr}_formated_EigenMT.txt \
+	    --GEN ${chr}_genotype.txt \
+	    --GENPOS ${chr}_genotype_position.txt \
+	    --PHEPOS ${chr}_phenotype_position.txt \
+        --cis_dist ${params.eqtl_window} \
+	    --OUT ${chr}_eigenMT_results.txt
+
+    """
+}
+
 
 // merge rasqual results
 
@@ -1589,6 +1768,64 @@ process ATAC_MERGE_eigenMT {
 process RNA_MERGE_eigenMT {
     container 'ndatth/rasqual:v0.0.0'
     publishDir "${params.outdir}/RNA_eigenMT_results_merged", mode: 'copy', overwrite: true
+    memory '8 GB'
+    cpus 1
+
+    input:
+    val max_chr
+    path results
+
+    output:
+    path("ALL_eigenMT_results.txt")
+
+
+    script:
+    """
+    
+    cat 1_eigenMT_results.txt > ALL_eigenMT_results.txt
+    ## exclude header
+    for chr in \$(seq 2 $max_chr)
+    do
+        awk 'NR!=1' \${chr}_eigenMT_results.txt >> ALL_eigenMT_results.txt
+    done
+    
+    """
+}
+
+
+// permuate
+
+
+process ATAC_MERGE_eigenMT_permute {
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/ATAC_eigenMT_results_merged_permute", mode: 'copy', overwrite: true
+    memory '8 GB'
+    cpus 1
+
+    input:
+    val max_chr
+    path results
+
+    output:
+    path("ALL_eigenMT_results.txt")
+
+
+    script:
+    """
+    
+    cat 1_eigenMT_results.txt > ALL_eigenMT_results.txt
+    ## exclude header
+    for chr in \$(seq 2 $max_chr)
+    do
+        awk 'NR!=1' \${chr}_eigenMT_results.txt >> ALL_eigenMT_results.txt
+    done
+    """
+}
+
+
+process RNA_MERGE_eigenMT_permute {
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/RNA_eigenMT_results_merged_permute", mode: 'copy', overwrite: true
     memory '8 GB'
     cpus 1
 
