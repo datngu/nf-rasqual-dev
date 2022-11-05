@@ -1515,7 +1515,7 @@ process ATAC_eigenMT {
     """
 
     eigenMT.py --CHROM ${chr} \
-	    --QTL ${rasqual_eigenMT} \
+	    --QTL ${chr}_formated_EigenMT.txt \
 	    --GEN ${chr}_genotype.txt \
 	    --GENPOS ${chr}_genotype_position.txt \
 	    --PHEPOS ${chr}_phenotype_position.txt \
@@ -1544,7 +1544,7 @@ process RNA_eigenMT {
     """
     
     eigenMT.py --CHROM ${chr} \
-	    --QTL ${rasqual_eigenMT} \
+	    --QTL ${chr}_formated_EigenMT.txt \
 	    --GEN ${chr}_genotype.txt \
 	    --GENPOS ${chr}_genotype_position.txt \
 	    --PHEPOS ${chr}_phenotype_position.txt \
