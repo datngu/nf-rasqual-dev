@@ -31,7 +31,7 @@ for l in fi:
         gene_id = tokens[0]
         chr = tokens[1]
         stat = tokens[3].split(",")[0]
-        end = stat = tokens[4].split(",")[-1]
+        end = tokens[4].split(",")[-1]
         l2 = "\t".join([ gene_id, chr, stat, end])
         l2 = l2 + "\n"
         fout_pos.writelines(l2)
