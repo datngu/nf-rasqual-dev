@@ -111,6 +111,7 @@ workflow {
 
             ATAC_rasqual_TO_eigenMT(chrom_list_ch, ATAC_RUN_rasqual_eigenMT.out.collect())
             //ATAC_MERGE_rasqual_eigenMT(chrom_list_ch.max(), ATAC_RUN_rasqual_eigenMT.out.collect())
+            ATAC_eigenMT_process_input(chrom_list_ch, ATAC_SPLIT_chromosome.out.collect())
         }
         
         // FDR by permuataion
@@ -165,6 +166,7 @@ workflow {
 
             RNA_rasqual_TO_eigenMT(chrom_list_ch, RNA_RUN_rasqual_eigenMT.out.collect())
             //RNA_MERGE_rasqual_eigenMT(chrom_list_ch.max(), RNA_RUN_rasqual_eigenMT.out.collect())
+            RNA_eigenMT_process_input(chrom_list_ch, RNA_SPLIT_chromosome.out.collect())
         }
         
         // FDR by permuataion
@@ -1437,6 +1439,67 @@ process RNA_rasqual_TO_eigenMT {
     rasqualToEigenMT.py --rasqualOut ${chr}_rasqual_all_snp.txt > ${chr}_formated_EigenMT.txt
     """
 }
+
+
+
+process ATAC_eigenMT_process_input {
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/ATAC_eigenMT_process_input", mode: 'symlink', overwrite: true
+    memory '8 GB'
+
+    input:
+    val chr
+    path split_chrom
+
+    output:
+    tuple path("${chr}_genotype.txt"), path("${chr}_genotype_position.txt"), path("${chr}_phenotype_position.txt")
+
+    script:
+    """
+    MatrixQTL_genotype_converter.py --vcf ${chr}.vcf.gz --out_genotype ${chr}_genotype.txt --out_genotype_position ${chr}_genotype_position.txt
+
+    MatrixQTL_ATAC_phenotype_converter.py --count ${chr}_count.txt --out_phenotype ${chr}_phenotype.txt --out_phenotype_position ${chr}_phenotype_position.txt
+
+    """
+}
+
+process RNA_eigenMT_process_input {
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/RNA_eigenMT_process_input", mode: 'symlink', overwrite: true
+    memory '8 GB'
+
+    input:
+    val chr
+    path split_chrom
+
+    output:
+    tuple path("${chr}_genotype.txt"), path("${chr}_genotype_position.txt"), path("${chr}_phenotype_position.txt")
+
+    script:
+    """
+    MatrixQTL_genotype_converter.py --vcf ${chr}.vcf.gz --out_genotype ${chr}_genotype.txt --out_genotype_position ${chr}_genotype_position.txt
+
+    MatrixQTL_RNA_phenotype_converter.py --count ${chr}_count.txt --out_phenotype ${chr}_phenotype.txt --out_phenotype_position ${chr}_phenotype_position.txt
+
+    """
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
