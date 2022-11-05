@@ -110,8 +110,12 @@ workflow {
             ATAC_RUN_rasqual_eigenMT(chrom_list_ch, ATAC_PREPROCESS_rasqual.out.collect(), ATAC_SPLIT_chromosome.out.collect(), ATAC_PROCESS_covariates.out)
 
             ATAC_rasqual_TO_eigenMT(chrom_list_ch, ATAC_RUN_rasqual_eigenMT.out.collect())
-            //ATAC_MERGE_rasqual_eigenMT(chrom_list_ch.max(), ATAC_RUN_rasqual_eigenMT.out.collect())
+
             ATAC_eigenMT_process_input(chrom_list_ch, ATAC_SPLIT_chromosome.out.collect())
+
+            ATAC_eigenMT(chrom_list_ch, ATAC_rasqual_TO_eigenMT.out.collect(), ATAC_eigenMT_process_input.out.collect())
+
+            ATAC_MERGE_eigenMT(chrom_list_ch.max(), ATAC_eigenMT.out.collect())
         }
         
         // FDR by permuataion
@@ -165,8 +169,12 @@ workflow {
             RNA_RUN_rasqual_eigenMT(chrom_list_ch, RNA_PREPROCESS_rasqual.out.collect(), RNA_SPLIT_chromosome.out.collect(), RNA_PROCESS_covariates.out)
 
             RNA_rasqual_TO_eigenMT(chrom_list_ch, RNA_RUN_rasqual_eigenMT.out.collect())
-            //RNA_MERGE_rasqual_eigenMT(chrom_list_ch.max(), RNA_RUN_rasqual_eigenMT.out.collect())
+            
             RNA_eigenMT_process_input(chrom_list_ch, RNA_SPLIT_chromosome.out.collect())
+
+            RNA_eigenMT(chrom_list_ch, RNA_rasqual_TO_eigenMT.out.collect(), RNA_eigenMT_process_input.out.collect())
+
+            RNA_MERGE_eigenMT(chrom_list_ch.max(), RNA_eigenMT.out.collect())
         }
         
         // FDR by permuataion
@@ -1463,6 +1471,8 @@ process ATAC_eigenMT_process_input {
     """
 }
 
+
+
 process RNA_eigenMT_process_input {
     container 'ndatth/rasqual:v0.0.0'
     publishDir "${params.outdir}/RNA_eigenMT_process_input", mode: 'symlink', overwrite: true
@@ -1486,69 +1496,112 @@ process RNA_eigenMT_process_input {
 
 
 
+// FDR correction with eigenMT
+
+process ATAC_eigenMT {
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/ATAC_eigenMT_results", mode: 'symlink', overwrite: true
+    memory '8 GB'
+
+    input:
+    val chr
+    path rasqual_eigenMT
+    path all_input
+
+    output:
+    path("${chr}_eigenMT_results.txt")
+
+    script:
+    """
+
+    eigenMT.py --CHROM ${chr} \
+	    --QTL ${rasqual_eigenMT} \
+	    --GEN ${chr}_genotype.txt \
+	    --GENPOS ${chr}_genotype_position.txt \
+	    --PHEPOS ${chr}_phenotype_position.txt \
+        --cis_dist ${params.atac_window} \
+	    --OUT ${chr}_eigenMT_results.txt
+
+    """
+}
 
 
 
+process RNA_eigenMT {
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/RNA_eigenMT_results", mode: 'symlink', overwrite: true
+    memory '8 GB'
 
+    input:
+    val chr
+    path rasqual_eigenMT
+    path all_input
 
+    output:
+    path("${chr}_eigenMT_results.txt")
 
+    script:
+    """
+    
+    eigenMT.py --CHROM ${chr} \
+	    --QTL ${rasqual_eigenMT} \
+	    --GEN ${chr}_genotype.txt \
+	    --GENPOS ${chr}_genotype_position.txt \
+	    --PHEPOS ${chr}_phenotype_position.txt \
+        --cis_dist ${params.atac_window} \
+	    --OUT ${chr}_eigenMT_results.txt
 
-
-
-
-
-
-
-
+    """
+}
 
 
 
 // merge rasqual results
 
 
-process ATAC_MERGE_rasqual_eigenMT {
+process ATAC_MERGE_eigenMT {
     container 'ndatth/rasqual:v0.0.0'
-    publishDir "${params.outdir}/ATAC_results_rasqual_merged_eigenMT", mode: 'symlink', overwrite: true
+    publishDir "${params.outdir}/ATAC_eigenMT_results_merged", mode: 'symlink', overwrite: true
     memory '8 GB'
     cpus 1
 
     input:
     val max_chr
-    path rasqual_results
+    path results
 
     output:
-    path("all_chromosome_rasqual_lead_snp.txt")
+    path("ALL_eigenMT_results.txt")
 
 
     script:
     """
     for chr in \$(seq 1 $max_chr)
     do
-        cat \${chr}_rasqual_lead_snp.txt >> all_chromosome_rasqual_lead_snp.txt
+        cat \${chr}_eigenMT_results.txt >> ALL_eigenMT_results.txt
     done
     """
 }
 
 
-process RNA_MERGE_rasqual_eigenMT {
+process RNA_MERGE_eigenMT {
     container 'ndatth/rasqual:v0.0.0'
-    publishDir "${params.outdir}/RNA_results_rasqual_merged_eigenMT", mode: 'symlink', overwrite: true
+    publishDir "${params.outdir}/RNA_eigenMT_results_merged", mode: 'symlink', overwrite: true
     memory '8 GB'
     cpus 1
 
     input:
     val max_chr
-    path rasqual_results
+    path results
 
     output:
-    path("all_chromosome_rasqual_lead_snp.txt")
+    path("ALL_eigenMT_results.txt")
 
 
     script:
     """
     for chr in \$(seq 1 $max_chr)
     do
-        cat \${chr}_rasqual_lead_snp.txt >> all_chromosome_rasqual_lead_snp.txt
+        cat \${chr}_eigenMT_results.txt >> ALL_eigenMT_results.txt
     done
     """
 }
