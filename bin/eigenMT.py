@@ -364,6 +364,20 @@ if __name__=='__main__':
         print('Processing Matrix-eQTL tests file. External genotype matrix and position file assumed.', flush=True)
         test_dict, input_header = make_test_dict_external(args.QTL, gen_dict, genpos_dict, phepos_dict, args.cis_dist)
 
-    ##Perform BF correction using eigenvalue decomposition of the correlation matrix
-    print('Performing eigenMT correction.', flush=True)
-    bf_eigen_windows(test_dict, gen_dict, phepos_dict, args.OUT, input_header, args.var_thresh, args.window)
+    # fix bug zero input in QTL resutls - sepcific to my nf-rasqual pipline
+    my_fl = open(args.QTL, 'rt')
+    N = 0
+    my_fl.close()
+    for l in my_fl:
+        N = N+1
+        
+    if(N < 2):
+        print('Input QTL have no input, export out a blank file as results.', flush=True)
+        # output a blank file to avoid downstream error 
+        fout_blank = open(args.OUT, 'w')
+        fout_blank.writelines("")
+        fout_blank.close()
+    else:
+        ##Perform BF correction using eigenvalue decomposition of the correlation matrix    
+        print('Performing eigenMT correction.', flush=True)
+        bf_eigen_windows(test_dict, gen_dict, phepos_dict, args.OUT, input_header, args.var_thresh, args.window)
