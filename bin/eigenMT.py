@@ -375,7 +375,7 @@ if __name__=='__main__':
         print('Input QTL have no input, export out a blank file as results.', flush=True)
         # output a blank file to avoid downstream error 
         fout_blank = open(args.OUT, 'w')
-        fout_blank.writelines("")
+        fout_blank.writelines("snps\tgene\tstatistic\tpvalue\tFDR\tbeta\tBF\tTESTS\n")
         fout_blank.close()
     else:
         ##Perform BF correction using eigenvalue decomposition of the correlation matrix    

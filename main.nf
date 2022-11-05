@@ -1575,9 +1575,12 @@ process ATAC_MERGE_eigenMT {
 
     script:
     """
-    for chr in \$(seq 1 $max_chr)
+    
+    cat 1_eigenMT_results.txt > ALL_eigenMT_results.txt
+    ## exclude header
+    for chr in \$(seq 2 $max_chr)
     do
-        cat \${chr}_eigenMT_results.txt >> ALL_eigenMT_results.txt
+        awk 'NR!=1' \${chr}_eigenMT_results.txt >> ALL_eigenMT_results.txt
     done
     """
 }
@@ -1599,10 +1602,14 @@ process RNA_MERGE_eigenMT {
 
     script:
     """
-    for chr in \$(seq 1 $max_chr)
+    
+    cat 1_eigenMT_results.txt > ALL_eigenMT_results.txt
+    ## exclude header
+    for chr in \$(seq 2 $max_chr)
     do
-        cat \${chr}_eigenMT_results.txt >> ALL_eigenMT_results.txt
+        awk 'NR!=1' \${chr}_eigenMT_results.txt >> ALL_eigenMT_results.txt
     done
+    
     """
 }
 
