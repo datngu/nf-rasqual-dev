@@ -36,8 +36,8 @@ params.exp_prop        = 0.5
 params.fpkm_cutoff     = 0.5
 params.maf             = 0.05
 params.fdr             = 0.1
-params.atac_window     = 10000
-params.eqtl_window     = 250000
+params.atac_window     = 50000
+params.eqtl_window     = 500000
 
 // pipeline options
 
