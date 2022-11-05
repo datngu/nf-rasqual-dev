@@ -367,10 +367,10 @@ if __name__=='__main__':
     # fix bug zero input in QTL resutls - sepcific to my nf-rasqual pipline
     my_fl = open(args.QTL, 'rt')
     N = 0
-    my_fl.close()
     for l in my_fl:
         N = N+1
-        
+    my_fl.close()
+    
     if(N < 2):
         print('Input QTL have no input, export out a blank file as results.', flush=True)
         # output a blank file to avoid downstream error 
