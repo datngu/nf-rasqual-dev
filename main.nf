@@ -86,11 +86,6 @@ workflow {
     permute_ch = channel.from(params.permute)
     VCF_filtering(params.genotype, params.meta)
 
-    // Leave one out implementation
-    if(params.loo){
-        LOO_meta_csv(params.meta)
-        ID_ch = LOO_meta_csv.out.map{ infile -> tuple( infile.baseName) }.flatten()
-    }
 
     // ATAC QTL
     if( params.atac_qtl ){
