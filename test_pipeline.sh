@@ -15,7 +15,7 @@ module load singularity/rpm
 
 # export PATH=$PATH:/Users/datn/Downloads/plink_mac_20220402
 # git clone https://github.com/datngu/nf-rasqual-dev.git
-cd /mnt/SCRATCH/ngda/nf-rasqual-dev
+#cd /mnt/SCRATCH/ngda/nf-rasqual-dev
 git pull
 
 #
