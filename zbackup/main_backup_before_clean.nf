@@ -43,9 +43,10 @@ params.eqtl_window     = 500000
 
 params.atac_qtl          = true
 params.eqtl_qtl          = true
+params.loo               = false
 // control for FDR
 params.eigenMT_fdr       = true
-//params.permute_fdr       = false
+params.permute_fdr       = false
 
 
 
@@ -73,6 +74,7 @@ log.info """\
     phenotype_PCs       : $params.phenotype_PCs
     atac_qtl            : $params.atac_qtl
     eqtl_qtl            : $params.eqtl_qtl
+    loo                 : $params.loo
 ================================================================
 """
 
@@ -126,6 +128,39 @@ workflow {
 
             ATAC_MERGE_eigenMT_permute(chrom_list_ch.max(), ATAC_eigenMT_permute.out.collect())
         }
+        
+        // FDR by permuataion
+        if(params.permute_fdr){
+            ATAC_RUN_rasqual(chrom_list_ch, ATAC_PREPROCESS_rasqual.out.collect(), ATAC_SPLIT_chromosome.out.collect(), ATAC_PROCESS_covariates.out)
+            ATAC_MERGE_rasqual(chrom_list_ch.max(), ATAC_RUN_rasqual.out.collect())
+            // run permuataion
+            ATAC_rasqual_permutation_input_ch = chrom_list_ch.combine(permute_ch)
+            ATAC_RUN_rasqual_permutation(ATAC_rasqual_permutation_input_ch, ATAC_PREPROCESS_rasqual.out.collect(), ATAC_SPLIT_chromosome.out.collect(), ATAC_PROCESS_covariates.out)
+            ATAC_MERGE_rasqual_permutation(chrom_list_ch.max(), ATAC_RUN_rasqual_permutation.out.groupTuple())
+            ATAC_COMPUTE_rasqual_emperical_pvalues(ATAC_MERGE_rasqual.out.collect(), ATAC_MERGE_rasqual_permutation.out.collect())
+        }
+    
+
+        // Leave one out implementation
+        if(params.loo){
+            LOO_atac_vcf(params.meta, ATAC_ADD_AS_vcf.out)
+            LOO_atac(params.meta, ATAC_FILTERING_expression.out)
+            LOO_ATAC_PROCESS_covariates(ID_ch, LOO_meta_csv.out.collect(), LOO_atac.out.collect())
+            LOO_ATAC_SPLIT_chromosome( ID_ch.combine(chrom_list_ch), LOO_atac_vcf.out, LOO_atac.out)
+
+            LOO_ATAC_PREPROCESS_rasqual( ID_ch.combine(chrom_list_ch), LOO_ATAC_SPLIT_chromosome.out.collect(), params.genome)
+            // run rasqual 
+            LOO_ATAC_RUN_rasqual(ID_ch.combine(chrom_list_ch), LOO_ATAC_PREPROCESS_rasqual.out.collect(), LOO_ATAC_SPLIT_chromosome.out.collect(), LOO_ATAC_PROCESS_covariates.out.collect())
+            // run rasqual permutation
+            //LOO_ATAC_RUN_rasqual_permutation(ID_ch.combine(chrom_list_ch), LOO_ATAC_PREPROCESS_rasqual.out.collect(), LOO_ATAC_SPLIT_chromosome.out.collect(), LOO_ATAC_PROCESS_covariates.out.collect())
+            
+            // merge results
+            LOO_ATAC_MERGE_rasqual(chrom_list_ch.max(), LOO_ATAC_RUN_rasqual.out.groupTuple())
+            //LOO_ATAC_MERGE_rasqual_permutation(chrom_list_ch.max(), LOO_ATAC_RUN_rasqual_permutation.out.groupTuple())
+
+            // emp pvalues
+            //LOO_ATAC_COMPUTE_rasqual_emperical_pvalues(LOO_ATAC_MERGE_rasqual.out, LOO_ATAC_MERGE_rasqual_permutation.out.collect())
+        }
     }
 
 
@@ -161,7 +196,41 @@ workflow {
             RNA_eigenMT_permute(chrom_list_ch, RNA_rasqual_TO_eigenMT_permute.out.collect(), RNA_eigenMT_process_input.out.collect())
 
             RNA_MERGE_eigenMT_permute(chrom_list_ch.max(), RNA_eigenMT_permute.out.collect())
-        }    
+        }
+        
+        // FDR by permuataion
+        if(params.permute_fdr){
+            RNA_RUN_rasqual(chrom_list_ch, RNA_PREPROCESS_rasqual.out.collect(), RNA_SPLIT_chromosome.out.collect(), RNA_PROCESS_covariates.out)
+            RNA_MERGE_rasqual(chrom_list_ch.max(), RNA_RUN_rasqual.out.collect())
+
+            RNA_rasqual_permutation_input_ch = chrom_list_ch.combine(permute_ch)
+            RNA_RUN_rasqual_permutation(RNA_rasqual_permutation_input_ch, RNA_PREPROCESS_rasqual.out.collect(), RNA_SPLIT_chromosome.out.collect(), RNA_PROCESS_covariates.out)
+            RNA_MERGE_rasqual_permutation(chrom_list_ch.max(), RNA_RUN_rasqual_permutation.out.groupTuple())
+
+            RNA_COMPUTE_rasqual_emperical_pvalues(RNA_MERGE_rasqual.out.collect(), RNA_MERGE_rasqual_permutation.out.collect())
+        }
+
+        // Leave one out implementation
+        if(params.loo){
+            LOO_rna_vcf(params.meta, RNA_ADD_AS_vcf.out)
+            LOO_rna(params.meta, RNA_FILTERING_expression.out)
+            LOO_RNA_PROCESS_covariates(ID_ch, LOO_meta_csv.out.collect(), LOO_rna.out.collect())
+            LOO_RNA_SPLIT_chromosome(ID_ch.combine(chrom_list_ch), LOO_rna_vcf.out, LOO_rna.out)
+            
+            LOO_RNA_PREPROCESS_rasqual( ID_ch.combine(chrom_list_ch), LOO_RNA_SPLIT_chromosome.out.collect(), params.genome)
+            // run rasqual
+            LOO_RNA_RUN_rasqual(ID_ch.combine(chrom_list_ch), LOO_RNA_PREPROCESS_rasqual.out.collect(), LOO_RNA_SPLIT_chromosome.out.collect(), LOO_RNA_PROCESS_covariates.out.collect())
+            // run rasqual permutation
+            LOO_RNA_RUN_rasqual_permutation(ID_ch.combine(chrom_list_ch), LOO_RNA_PREPROCESS_rasqual.out.collect(), LOO_RNA_SPLIT_chromosome.out.collect(), LOO_RNA_PROCESS_covariates.out.collect())
+            
+            // merge results
+            LOO_RNA_MERGE_rasqual(chrom_list_ch.max(), LOO_RNA_RUN_rasqual.out.groupTuple())
+            LOO_RNA_MERGE_rasqual_permutation(chrom_list_ch.max(), LOO_RNA_RUN_rasqual_permutation.out.groupTuple())
+
+            // emp pvalues
+            LOO_RNA_COMPUTE_rasqual_emperical_pvalues(LOO_RNA_MERGE_rasqual.out, LOO_RNA_MERGE_rasqual_permutation.out.collect())
+        }
+        
     }
 }
 
@@ -772,6 +841,532 @@ process RNA_COMPUTE_rasqual_emperical_pvalues {
 }
 
 
+// LEAVE ONE OUT ANALYSES
+
+
+process LOO_meta_csv {
+
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/loo_meta", mode: 'symlink', overwrite: true
+    memory '8 GB'
+
+    input:
+    path meta
+
+    output:
+    path "tem/*"
+
+    script:
+    """
+    loo_meta.R $meta
+    """
+}
+
+process LOO_atac {
+
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/loo_atac", mode: 'symlink', overwrite: true
+    memory '8 GB'
+
+    input:
+    path meta
+    path atac_count_filtered
+
+    output:
+    path "*_atac_count.txt"
+
+    script:
+    """
+    loo_ATAC.R $meta $atac_count_filtered
+    """
+}
+
+
+process LOO_atac_vcf {
+
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/loo_atac_vcf", mode: 'symlink', overwrite: true
+    memory '8 GB'
+
+    input:
+    path meta
+    path vcf
+
+    output:
+    path("*_loo.vcf.*")
+
+
+    script:
+    """
+    loo_VCF.R $meta "processed.vcf.gz"
+    """
+}
+
+
+process LOO_rna {
+
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/loo_rna", mode: 'symlink', overwrite: true
+    memory '8 GB'
+
+    input:
+    path meta
+    path rna_count_filtered
+
+    output:
+    path "*_rna_count.txt"
+
+    script:
+    """
+    loo_RNA.R $meta $rna_count_filtered
+    """
+}
+
+
+process LOO_rna_vcf {
+
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/loo_rna_vcf", mode: 'symlink', overwrite: true
+    memory '8 GB'
+
+    input:
+    path meta
+    path vcf
+
+    output:
+    path("*_loo.vcf.*")
+
+
+    script:
+    """
+    loo_VCF.R $meta "processed.vcf.gz"
+    """
+}
+
+
+//// normal processing for LOO
+
+process LOO_ATAC_PROCESS_covariates {
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/loo_ATAC_covariates", mode: 'symlink', overwrite: true
+    memory '8 GB'
+
+    input:
+    val ID
+    path meta
+    path atac_count
+
+    output:
+    tuple path("${ID}_atac.covs_all_chrom.bin"), path("${ID}_atac.covs_all_chrom.txt")
+
+    script:
+    """
+    ATAC_covariates.R ${ID}.csv ${ID}_atac_count.txt $params.phenotype_PCs
+
+    mv atac.covs_all_chrom.bin ${ID}_atac.covs_all_chrom.bin
+    mv atac.covs_all_chrom.txt ${ID}_atac.covs_all_chrom.txt
+    """
+}
+
+
+process LOO_RNA_PROCESS_covariates {
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/loo_RNA_covariates", mode: 'symlink', overwrite: true
+    memory '8 GB'
+
+    input:
+    val ID
+    path meta
+    path rna_count
+
+    output:
+    tuple path("${ID}_rna.covs_all_chrom.bin"), path("${ID}_rna.covs_all_chrom.txt")
+
+    script:
+    """
+    RNA_covariates.R ${ID}.csv ${ID}_rna_count.txt $params.phenotype_PCs
+
+    mv rna.covs_all_chrom.bin ${ID}_rna.covs_all_chrom.bin
+    mv rna.covs_all_chrom.txt ${ID}_rna.covs_all_chrom.txt
+    """
+}
+
+
+
+// slipt chomosome
+
+process LOO_ATAC_SPLIT_chromosome {
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/loo_ATAC_split_chrom", mode: 'symlink', overwrite: true
+    memory '8 GB'
+
+    input:
+    tuple val(ID), val (chr)
+    path in_vcf
+    path in_exp
+
+    output:
+    tuple path("${ID}_${chr}.vcf.gz"), path("${ID}_${chr}.vcf.gz.tbi"), path("${ID}_${chr}_count.txt")
+
+    script:
+    """
+    awk 'NR==1{print }' ${ID}_atac_count.txt > ${ID}_${chr}_count.txt
+    awk -v chr=$chr '{ if (\$2 == $chr) { print } }' ${ID}_atac_count.txt >> ${ID}_${chr}_count.txt
+
+    bcftools view ${ID}_loo.vcf.gz --regions ${chr} -Oz -o ${ID}_${chr}.vcf.gz
+    bcftools index -t ${ID}_${chr}.vcf.gz
+    """
+}
+
+
+process LOO_RNA_SPLIT_chromosome {
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/loo_RNA_split_chrom", mode: 'symlink', overwrite: true
+    memory '8 GB'
+
+    input:
+    tuple val(ID), val (chr)
+    path in_vcf
+    path in_exp
+
+    output:
+    tuple path("${ID}_${chr}.vcf.gz"), path("${ID}_${chr}.vcf.gz.tbi"), path("${ID}_${chr}_count.txt")
+
+    script:
+    """
+    awk 'NR==1{print }' ${ID}_rna_count.txt > ${ID}_${chr}_count.txt
+    awk -v chr=$chr '{ if (\$2 == $chr) { print } }' ${ID}_rna_count.txt >> ${ID}_${chr}_count.txt
+
+    bcftools view ${ID}_loo.vcf.gz --regions ${chr} -Oz -o ${ID}_${chr}.vcf.gz
+    bcftools index -t ${ID}_${chr}.vcf.gz
+    """
+}
+
+
+
+
+
+
+
+// proprocessing
+
+
+process LOO_ATAC_PREPROCESS_rasqual {
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/loo_ATAC_qtl_input", mode: 'symlink', overwrite: true
+    memory '64 GB'
+    cpus 8
+
+    input:
+    tuple val(ID), val (chr)
+    path split_chrom
+    path genome
+
+    output:
+    tuple path("${ID}_${chr}_atac.exp.bin"), path("${ID}_${chr}_atac.exp.txt"), path("${ID}_${chr}_atac.size_factors.bin"), path("${ID}_${chr}_atac.size_factors.txt"), path("${ID}_${chr}_snp_counts.tsv")
+
+
+    script:
+    """
+
+    ATAC_rasqual_processor.R ${ID}_${chr}_count.txt ${ID}_${chr}.vcf.gz $genome $params.atac_window ${task.cpus}
+    ## rename files
+    mv atac.exp.bin ${ID}_${chr}_atac.exp.bin
+    mv atac.exp.txt ${ID}_${chr}_atac.exp.txt
+    mv atac.size_factors.bin ${ID}_${chr}_atac.size_factors.bin
+    mv atac.size_factors.txt ${ID}_${chr}_atac.size_factors.txt
+    mv snp_counts.tsv ${ID}_${chr}_snp_counts.tsv
+
+    """
+}
+
+
+
+process LOO_RNA_PREPROCESS_rasqual {
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/loo_RNA_qtl_input", mode: 'symlink', overwrite: true
+    memory '64 GB'
+    cpus 8
+
+    input:
+    tuple val(ID), val (chr)
+    path split_chrom
+    path genome
+
+    output:
+    tuple path("${ID}_${chr}_rna.exp.bin"), path("${ID}_${chr}_rna.exp.txt"), path("${ID}_${chr}_rna.size_factors.bin"), path("${ID}_${chr}_rna.size_factors.txt"), path("${ID}_${chr}_snp_counts.tsv")
+
+
+    script:
+    """
+
+    RNA_rasqual_processor.R ${ID}_${chr}_count.txt ${ID}_${chr}.vcf.gz $genome $params.eqtl_window ${task.cpus}
+    ## rename files
+    mv rna.exp.bin ${ID}_${chr}_rna.exp.bin
+    mv rna.exp.txt ${ID}_${chr}_rna.exp.txt
+    mv rna.size_factors.bin ${ID}_${chr}_rna.size_factors.bin
+    mv rna.size_factors.txt ${ID}_${chr}_rna.size_factors.txt
+    mv snp_counts.tsv ${ID}_${chr}_snp_counts.tsv
+
+    """
+}
+
+
+
+// QTL mapping with rasqual
+
+process LOO_ATAC_RUN_rasqual {
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/loo_ATAC_results_rasqual", mode: 'symlink', overwrite: true
+    memory '64 GB'
+    cpus 16
+
+    input:
+    tuple val(ID), val (chr)
+    path preproces_data
+    path split_chrom
+    path covariates
+
+    output:
+    tuple val("${ID}"), path("${ID}_${chr}_rasqual_lead_snp.txt")
+
+
+    script:
+    """
+    echo \$HOSTNAME
+    rasqual.R vcf=${ID}_${chr}.vcf.gz y=${ID}_${chr}_atac.exp.bin k=${ID}_${chr}_atac.size_factors.bin x=${ID}_atac.covs_all_chrom.bin x_txt=${ID}_atac.covs_all_chrom.txt meta=${ID}_${chr}_snp_counts.tsv out=${ID}_${chr}_rasqual_lead_snp.txt cpu=${task.cpus}
+    """
+}
+
+
+process LOO_RNA_RUN_rasqual {
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/loo_RNA_results_rasqual", mode: 'symlink', overwrite: true
+    memory '64 GB'
+    cpus 16
+
+    input:
+    tuple val(ID), val (chr)
+    path preproces_data
+    path split_chrom
+    path covariates
+
+    output:
+    tuple val("${ID}"), path("${ID}_${chr}_rasqual_lead_snp.txt")
+
+
+    script:
+    """
+    echo \$HOSTNAME
+    rasqual.R vcf=${ID}_${chr}.vcf.gz y=${ID}_${chr}_rna.exp.bin k=${ID}_${chr}_rna.size_factors.bin x=${ID}_rna.covs_all_chrom.bin x_txt=${ID}_rna.covs_all_chrom.txt meta=${ID}_${chr}_snp_counts.tsv out=${ID}_${chr}_rasqual_lead_snp.txt cpu=${task.cpus}
+    """
+}
+
+
+// merge rasqual results
+
+
+process LOO_ATAC_MERGE_rasqual {
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/loo_ATAC_results_rasqual_merged", mode: 'symlink', overwrite: true
+    memory '8 GB'
+    cpus 1
+
+    input:
+    val max_chr
+    tuple val(ID), path(rasqual_results)
+
+    output:
+    tuple val("${ID}"),path("${ID}_all_chromosome_rasqual_lead_snp.txt")
+
+
+    script:
+    """
+    for chr in \$(seq 1 $max_chr)
+    do
+        cat ${ID}_\${chr}_rasqual_lead_snp.txt >> ${ID}_all_chromosome_rasqual_lead_snp.txt
+    done
+    """
+}
+
+
+process LOO_RNA_MERGE_rasqual {
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/loo_RNA_results_rasqual_merged", mode: 'symlink', overwrite: true
+    memory '8 GB'
+    cpus 1
+
+    input:
+    val max_chr
+    tuple val(ID), path(rasqual_results)
+
+    output:
+    tuple val("${ID}"), path("${ID}_all_chromosome_rasqual_lead_snp.txt")
+
+
+    script:
+    """
+    for chr in \$(seq 1 $max_chr)
+    do
+        cat ${ID}_\${chr}_rasqual_lead_snp.txt >> ${ID}_all_chromosome_rasqual_lead_snp.txt
+    done
+    """
+}
+
+
+
+// run rasqual permulation
+
+process LOO_ATAC_RUN_rasqual_permutation {
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/loo_ATAC_results_rasqual_permutaion", mode: 'symlink', overwrite: true
+    memory '64 GB'
+    cpus 16
+
+    input:
+    tuple val(ID), val (chr)
+    path preproces_data
+    path split_chrom
+    path covariates
+
+
+    output:
+    tuple val("${ID}"), path("${ID}_${chr}_permute_rasqual_lead_snp.txt")
+
+
+    script:
+    """
+
+    echo \$HOSTNAME
+    rasqual_permute.R vcf=${ID}_${chr}.vcf.gz y=${ID}_${chr}_atac.exp.bin k=${ID}_${chr}_atac.size_factors.bin x=${ID}_atac.covs_all_chrom.bin x_txt=${ID}_atac.covs_all_chrom.txt meta=${ID}_${chr}_snp_counts.tsv out=${ID}_${chr}_permute_rasqual_lead_snp.txt cpu=${task.cpus}
+    
+    """
+}
+
+
+process LOO_RNA_RUN_rasqual_permutation {
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/loo_RNA_results_rasqual_permutaion", mode: 'symlink', overwrite: true
+    memory '64 GB'
+    cpus 16
+
+    input:
+    tuple val(ID), val (chr)
+    path preproces_data
+    path split_chrom
+    path covariates
+
+
+    output:
+    tuple val("${ID}"), path("${ID}_${chr}_permute_rasqual_lead_snp.txt")
+
+    script:
+    """
+
+    echo \$HOSTNAME
+    rasqual_permute.R vcf=${ID}_${chr}.vcf.gz y=${ID}_${chr}_rna.exp.bin k=${ID}_${chr}_rna.size_factors.bin x=${ID}_rna.covs_all_chrom.bin x_txt=${ID}_rna.covs_all_chrom.txt meta=${ID}_${chr}_snp_counts.tsv out=${ID}_${chr}_permute_rasqual_lead_snp.txt cpu=${task.cpus}
+
+
+    """
+}
+
+
+// merge rasqual permutation results
+
+process LOO_ATAC_MERGE_rasqual_permutation {
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/loo_ATAC_results_rasqual_permutaion_merged", mode: 'symlink', overwrite: true
+    memory '8 GB'
+    cpus 1
+
+    input:
+    val max_chr
+    tuple val(ID), path(rasqual_results)
+    
+
+    output:
+    path("${ID}_permute_all_chromosome_rasqual_lead_snp.txt")
+
+
+    script:
+    """
+    for chr in \$(seq 1 $max_chr)
+    do
+        cat ${ID}_\${chr}_permute_rasqual_lead_snp.txt >> ${ID}_permute_all_chromosome_rasqual_lead_snp.txt
+    done
+    """
+}
+
+
+
+process LOO_RNA_MERGE_rasqual_permutation {
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/loo_RNA_results_rasqual_permutaion_merged", mode: 'symlink', overwrite: true
+    memory '8 GB'
+    cpus 1
+
+    input:
+    val max_chr
+    tuple val(ID), path(rasqual_results)
+    
+
+    output:
+    path("${ID}_permute_all_chromosome_rasqual_lead_snp.txt")
+
+
+    script:
+    """
+    for chr in \$(seq 1 $max_chr)
+    do
+        cat ${ID}_\${chr}_permute_rasqual_lead_snp.txt >> ${ID}_permute_all_chromosome_rasqual_lead_snp.txt
+    done
+    """
+}
+
+
+// LOO compute rasqual emperical pvalues
+
+
+process LOO_ATAC_COMPUTE_rasqual_emperical_pvalues {
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/loo_ATAC_results_emperical_pvalues", mode: 'symlink', overwrite: true
+    memory '8 GB'
+    cpus 1
+
+    input:
+    tuple val(ID), path(merged_results)
+    path permuation_merged_results
+
+    output:
+    path("${ID}_rasqual_emperical_pvalues.txt")
+
+
+    script:
+    """
+    rasqual_emperical_pvalues.R ${ID}_rasqual_emperical_pvalues.txt $merged_results $permuation_merged_results
+    """
+}
+
+
+process LOO_RNA_COMPUTE_rasqual_emperical_pvalues {
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/loo_RNA_results_emperical_pvalues", mode: 'symlink', overwrite: true
+    memory '8 GB'
+    cpus 1
+
+    input:
+    tuple val(ID), path(merged_results)
+    path permuation_merged_results
+
+    output:
+    path("${ID}_rasqual_emperical_pvalues.txt")
+
+
+    script:
+    """
+    rasqual_emperical_pvalues.R ${ID}_rasqual_emperical_pvalues.txt $merged_results $permuation_merged_results
+    """
+}
 
 
 
