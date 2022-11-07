@@ -38,7 +38,7 @@ run_nextflow () {
   mkdir $nextflow_work_dir
   cd $nextflow_work_dir
   git clone https://github.com/datngu/nf-rasqual-dev.git
-  cd nf-rasqual
+  cd nf-rasqual-dev
   git pull
   export NXF_SINGULARITY_CACHEDIR=/mnt/users/ngda/sofware/singularity
   nextflow run main.nf -resume --meta $meta_file --genome $genome --annotation $annotation --atac_bam $atac_bam --atac_count $atac_count --rna_bam $rna_bam --rna_count $rna_count --genotype $genotype --outdir $nextflow_res_dir
