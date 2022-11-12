@@ -79,8 +79,9 @@ log.info """\
 
 nextflow.enable.dsl=2
 
-// include module processes
-include { LOO_rna_vcf;  LOO_rna; LOO_RNA_PROCESS_covariates; LOO_RNA_SPLIT_chromosome; LOO_RNA_PREPROCESS_rasqual; LOO_RNA_RUN_rasqual_eigenMT; LOO_RNA_rasqual_TO_eigenMT} from './module/loo_RNA'
+// include module loo_RNA
+
+include { LOO_rna_vcf;  LOO_rna; LOO_RNA_PROCESS_covariates; LOO_RNA_SPLIT_chromosome; LOO_RNA_PREPROCESS_rasqual; LOO_RNA_RUN_rasqual_eigenMT; LOO_RNA_rasqual_TO_eigenMT; LOO_RNA_eigenMT_process_input; LOO_RNA_eigenMT; LOO_RNA_MERGE_eigenMT} from './module/loo_RNA'
 
 workflow {
 
