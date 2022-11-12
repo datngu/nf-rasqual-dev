@@ -79,6 +79,8 @@ log.info """\
 
 nextflow.enable.dsl=2
 
+// include module processes
+include { LOO_rna_vcf;  LOO_rna; LOO_RNA_PROCESS_covariates; LOO_RNA_SPLIT_chromosome; LOO_RNA_PREPROCESS_rasqual; LOO_RNA_RUN_rasqual_eigenMT; LOO_RNA_rasqual_TO_eigenMT} from './module/loo_RNA'
 
 workflow {
 
@@ -164,6 +166,7 @@ workflow {
 
         // Leave one out implementation
         if(params.loo){
+
             LOO_rna_vcf(params.meta, RNA_ADD_AS_vcf.out)
             LOO_rna(params.meta, RNA_FILTERING_expression.out)
             LOO_RNA_PROCESS_covariates(ID_ch, LOO_meta_csv.out.collect(), LOO_rna.out.collect())
@@ -171,16 +174,15 @@ workflow {
             
             LOO_RNA_PREPROCESS_rasqual( ID_ch.combine(chrom_list_ch), LOO_RNA_SPLIT_chromosome.out.collect(), params.genome)
             // run rasqual
-            LOO_RNA_RUN_rasqual(ID_ch.combine(chrom_list_ch), LOO_RNA_PREPROCESS_rasqual.out.collect(), LOO_RNA_SPLIT_chromosome.out.collect(), LOO_RNA_PROCESS_covariates.out.collect())
-            // run rasqual permutation
-            LOO_RNA_RUN_rasqual_permutation(ID_ch.combine(chrom_list_ch), LOO_RNA_PREPROCESS_rasqual.out.collect(), LOO_RNA_SPLIT_chromosome.out.collect(), LOO_RNA_PROCESS_covariates.out.collect())
-            
-            // merge results
-            LOO_RNA_MERGE_rasqual(chrom_list_ch.max(), LOO_RNA_RUN_rasqual.out.groupTuple())
-            LOO_RNA_MERGE_rasqual_permutation(chrom_list_ch.max(), LOO_RNA_RUN_rasqual_permutation.out.groupTuple())
+            LOO_RNA_RUN_rasqual_eigenMT(ID_ch.combine(chrom_list_ch), LOO_RNA_PREPROCESS_rasqual.out.collect(), LOO_RNA_SPLIT_chromosome.out.collect(), LOO_RNA_PROCESS_covariates.out.collect())
 
-            // emp pvalues
-            LOO_RNA_COMPUTE_rasqual_emperical_pvalues(LOO_RNA_MERGE_rasqual.out, LOO_RNA_MERGE_rasqual_permutation.out.collect())
+            LOO_RNA_rasqual_TO_eigenMT(ID_ch.combine(chrom_list_ch) , LOO_RNA_RUN_rasqual_eigenMT.out.collect())
+
+            LOO_RNA_eigenMT_process_input(ID_ch.combine(chrom_list_ch), LOO_RNA_SPLIT_chromosome.out.collect())
+
+            LOO_RNA_eigenMT(ID_ch.combine(chrom_list_ch), LOO_RNA_rasqual_TO_eigenMT.out.collect(), LOO_RNA_eigenMT_process_input.out.collect())
+
+            LOO_RNA_MERGE_eigenMT(chrom_list_ch.max(), LOO_RNA_eigenMT.out.groupTuple())
         }    
     }
 }
