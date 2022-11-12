@@ -43,6 +43,7 @@ params.eqtl_window     = 500000
 
 params.atac_qtl          = true
 params.eqtl_qtl          = true
+params.loo               = false
 // control for FDR
 params.eigenMT_fdr       = true
 //params.permute_fdr       = false
@@ -87,6 +88,13 @@ workflow {
     VCF_filtering(params.genotype, params.meta)
 
 
+    // Leave one out implementation
+    if(params.loo){
+        LOO_meta_csv(params.meta)
+        ID_ch = LOO_meta_csv.out.map{ infile -> tuple( infile.baseName) }.flatten()
+    }
+
+
     // ATAC QTL
     if( params.atac_qtl ){
         atac_bam_ch = channel.fromPath( params.atac_bam, checkIfExists: true )
@@ -98,29 +106,26 @@ workflow {
         ATAC_SPLIT_chromosome(chrom_list_ch, ATAC_ADD_AS_vcf.out, ATAC_FILTERING_expression.out )
         ATAC_PREPROCESS_rasqual(chrom_list_ch, ATAC_SPLIT_chromosome.out.collect(), params.genome)
         
-        // FDR by eigenMT
-        if(params.eigenMT_fdr){
+        // eigenMT
 
-            ATAC_eigenMT_process_input(chrom_list_ch, ATAC_SPLIT_chromosome.out.collect())
+        ATAC_eigenMT_process_input(chrom_list_ch, ATAC_SPLIT_chromosome.out.collect())
 
-            ATAC_RUN_rasqual_eigenMT(chrom_list_ch, ATAC_PREPROCESS_rasqual.out.collect(), ATAC_SPLIT_chromosome.out.collect(), ATAC_PROCESS_covariates.out)
+        ATAC_RUN_rasqual_eigenMT(chrom_list_ch, ATAC_PREPROCESS_rasqual.out.collect(), ATAC_SPLIT_chromosome.out.collect(), ATAC_PROCESS_covariates.out)
 
-            ATAC_rasqual_TO_eigenMT(chrom_list_ch, ATAC_RUN_rasqual_eigenMT.out.collect())
+        ATAC_rasqual_TO_eigenMT(chrom_list_ch, ATAC_RUN_rasqual_eigenMT.out.collect())
 
-            ATAC_eigenMT(chrom_list_ch, ATAC_rasqual_TO_eigenMT.out.collect(), ATAC_eigenMT_process_input.out.collect())
+        ATAC_eigenMT(chrom_list_ch, ATAC_rasqual_TO_eigenMT.out.collect(), ATAC_eigenMT_process_input.out.collect())
 
-            ATAC_MERGE_eigenMT(chrom_list_ch.max(), ATAC_eigenMT.out.collect())
+        ATAC_MERGE_eigenMT(chrom_list_ch.max(), ATAC_eigenMT.out.collect())
 
-            // permutation
+        // permutation
+        ATAC_RUN_rasqual_eigenMT_permute(chrom_list_ch, ATAC_PREPROCESS_rasqual.out.collect(), ATAC_SPLIT_chromosome.out.collect(), ATAC_PROCESS_covariates.out)
 
-            ATAC_RUN_rasqual_eigenMT_permute(chrom_list_ch, ATAC_PREPROCESS_rasqual.out.collect(), ATAC_SPLIT_chromosome.out.collect(), ATAC_PROCESS_covariates.out)
+        ATAC_rasqual_TO_eigenMT_permute(chrom_list_ch, ATAC_RUN_rasqual_eigenMT_permute.out.collect())
 
-            ATAC_rasqual_TO_eigenMT_permute(chrom_list_ch, ATAC_RUN_rasqual_eigenMT_permute.out.collect())
+        ATAC_eigenMT_permute(chrom_list_ch, ATAC_rasqual_TO_eigenMT_permute.out.collect(), ATAC_eigenMT_process_input.out.collect())
 
-            ATAC_eigenMT_permute(chrom_list_ch, ATAC_rasqual_TO_eigenMT_permute.out.collect(), ATAC_eigenMT_process_input.out.collect())
-
-            ATAC_MERGE_eigenMT_permute(chrom_list_ch.max(), ATAC_eigenMT_permute.out.collect())
-        }
+        ATAC_MERGE_eigenMT_permute(chrom_list_ch.max(), ATAC_eigenMT_permute.out.collect())
     }
 
 
@@ -135,27 +140,47 @@ workflow {
         RNA_SPLIT_chromosome(chrom_list_ch, RNA_ADD_AS_vcf.out, RNA_FILTERING_expression.out )
         RNA_PREPROCESS_rasqual(chrom_list_ch, RNA_SPLIT_chromosome.out.collect(), params.genome)
         
-        // FDR by eigenMT
-        if(params.eigenMT_fdr){
-            RNA_RUN_rasqual_eigenMT(chrom_list_ch, RNA_PREPROCESS_rasqual.out.collect(), RNA_SPLIT_chromosome.out.collect(), RNA_PROCESS_covariates.out)
+        // eigenMT part
+        RNA_RUN_rasqual_eigenMT(chrom_list_ch, RNA_PREPROCESS_rasqual.out.collect(), RNA_SPLIT_chromosome.out.collect(), RNA_PROCESS_covariates.out)
 
-            RNA_rasqual_TO_eigenMT(chrom_list_ch, RNA_RUN_rasqual_eigenMT.out.collect())
+        RNA_rasqual_TO_eigenMT(chrom_list_ch, RNA_RUN_rasqual_eigenMT.out.collect())
             
-            RNA_eigenMT_process_input(chrom_list_ch, RNA_SPLIT_chromosome.out.collect())
+        RNA_eigenMT_process_input(chrom_list_ch, RNA_SPLIT_chromosome.out.collect())
 
-            RNA_eigenMT(chrom_list_ch, RNA_rasqual_TO_eigenMT.out.collect(), RNA_eigenMT_process_input.out.collect())
+        RNA_eigenMT(chrom_list_ch, RNA_rasqual_TO_eigenMT.out.collect(), RNA_eigenMT_process_input.out.collect())
 
-            RNA_MERGE_eigenMT(chrom_list_ch.max(), RNA_eigenMT.out.collect())
+        RNA_MERGE_eigenMT(chrom_list_ch.max(), RNA_eigenMT.out.collect())
 
-            // permutation
+        // eigenMT permutation - for FDR checking
 
-            RNA_RUN_rasqual_eigenMT_permute(chrom_list_ch, RNA_PREPROCESS_rasqual.out.collect(), RNA_SPLIT_chromosome.out.collect(), RNA_PROCESS_covariates.out)
+        RNA_RUN_rasqual_eigenMT_permute(chrom_list_ch, RNA_PREPROCESS_rasqual.out.collect(), RNA_SPLIT_chromosome.out.collect(), RNA_PROCESS_covariates.out)
 
-            RNA_rasqual_TO_eigenMT_permute(chrom_list_ch, RNA_RUN_rasqual_eigenMT_permute.out.collect())
+        RNA_rasqual_TO_eigenMT_permute(chrom_list_ch, RNA_RUN_rasqual_eigenMT_permute.out.collect())
 
-            RNA_eigenMT_permute(chrom_list_ch, RNA_rasqual_TO_eigenMT_permute.out.collect(), RNA_eigenMT_process_input.out.collect())
+        RNA_eigenMT_permute(chrom_list_ch, RNA_rasqual_TO_eigenMT_permute.out.collect(), RNA_eigenMT_process_input.out.collect())
 
-            RNA_MERGE_eigenMT_permute(chrom_list_ch.max(), RNA_eigenMT_permute.out.collect())
+        RNA_MERGE_eigenMT_permute(chrom_list_ch.max(), RNA_eigenMT_permute.out.collect())
+
+
+        // Leave one out implementation
+        if(params.loo){
+            LOO_rna_vcf(params.meta, RNA_ADD_AS_vcf.out)
+            LOO_rna(params.meta, RNA_FILTERING_expression.out)
+            LOO_RNA_PROCESS_covariates(ID_ch, LOO_meta_csv.out.collect(), LOO_rna.out.collect())
+            LOO_RNA_SPLIT_chromosome(ID_ch.combine(chrom_list_ch), LOO_rna_vcf.out, LOO_rna.out)
+            
+            LOO_RNA_PREPROCESS_rasqual( ID_ch.combine(chrom_list_ch), LOO_RNA_SPLIT_chromosome.out.collect(), params.genome)
+            // run rasqual
+            LOO_RNA_RUN_rasqual(ID_ch.combine(chrom_list_ch), LOO_RNA_PREPROCESS_rasqual.out.collect(), LOO_RNA_SPLIT_chromosome.out.collect(), LOO_RNA_PROCESS_covariates.out.collect())
+            // run rasqual permutation
+            LOO_RNA_RUN_rasqual_permutation(ID_ch.combine(chrom_list_ch), LOO_RNA_PREPROCESS_rasqual.out.collect(), LOO_RNA_SPLIT_chromosome.out.collect(), LOO_RNA_PROCESS_covariates.out.collect())
+            
+            // merge results
+            LOO_RNA_MERGE_rasqual(chrom_list_ch.max(), LOO_RNA_RUN_rasqual.out.groupTuple())
+            LOO_RNA_MERGE_rasqual_permutation(chrom_list_ch.max(), LOO_RNA_RUN_rasqual_permutation.out.groupTuple())
+
+            // emp pvalues
+            LOO_RNA_COMPUTE_rasqual_emperical_pvalues(LOO_RNA_MERGE_rasqual.out, LOO_RNA_MERGE_rasqual_permutation.out.collect())
         }    
     }
 }
@@ -1250,3 +1275,22 @@ process RNA_MERGE_eigenMT_permute {
     """
 }
 
+// LEAVE ONE OUT ANALYSES
+
+process LOO_meta_csv {
+
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/loo_meta", mode: 'symlink', overwrite: true
+    memory '8 GB'
+
+    input:
+    path meta
+
+    output:
+    path "tem/*"
+
+    script:
+    """
+    loo_meta.R $meta
+    """
+}
