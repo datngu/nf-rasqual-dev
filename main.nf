@@ -177,7 +177,7 @@ workflow {
             // run rasqual
             LOO_RNA_RUN_rasqual_eigenMT(ID_ch.combine(chrom_list_ch), LOO_RNA_PREPROCESS_rasqual.out.collect(), LOO_RNA_SPLIT_chromosome.out.collect(), LOO_RNA_PROCESS_covariates.out.collect())
 
-            LOO_RNA_rasqual_TO_eigenMT(ID_ch.combine(chrom_list_ch) , LOO_RNA_RUN_rasqual_eigenMT.out.collect())
+            LOO_RNA_rasqual_TO_eigenMT(ID_ch.combine(chrom_list_ch) , LOO_RNA_RUN_rasqual_eigenMT.out.map{it[1]}.collect())
 
             LOO_RNA_eigenMT_process_input(ID_ch.combine(chrom_list_ch), LOO_RNA_SPLIT_chromosome.out.collect())
 
