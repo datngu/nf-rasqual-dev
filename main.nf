@@ -179,9 +179,11 @@ workflow {
 
             LOO_RNA_rasqual_TO_eigenMT(ID_ch.combine(chrom_list_ch) , LOO_RNA_RUN_rasqual_eigenMT.out.map{it[1]}.collect())
 
-            LOO_RNA_eigenMT_process_input(ID_ch.combine(chrom_list_ch), LOO_RNA_SPLIT_chromosome.out.collect())
+            //LOO_RNA_eigenMT_process_input(ID_ch.combine(chrom_list_ch), LOO_RNA_SPLIT_chromosome.out.collect())
 
-            LOO_RNA_eigenMT(ID_ch.combine(chrom_list_ch), LOO_RNA_rasqual_TO_eigenMT.out.collect(), LOO_RNA_eigenMT_process_input.out.collect())
+            //LOO_RNA_eigenMT(ID_ch.combine(chrom_list_ch), LOO_RNA_rasqual_TO_eigenMT.out.collect(), LOO_RNA_eigenMT_process_input.out.collect())
+
+            LOO_RNA_eigenMT(ID_ch.combine(chrom_list_ch), LOO_RNA_rasqual_TO_eigenMT.out.collect(), RNA_eigenMT_process_input.out.collect())
 
             LOO_RNA_MERGE_eigenMT(chrom_list_ch.max(), LOO_RNA_eigenMT.out.groupTuple())
         }    

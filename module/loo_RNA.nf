@@ -197,7 +197,8 @@ process LOO_RNA_eigenMT_process_input {
 
 
 
-process LOO_RNA_eigenMT {
+
+process LOO_RNA_eigenMT_NO_USE {
     container 'ndatth/rasqual:v0.0.0'
     publishDir "${params.outdir}/loo_RNA_eigenMT_results", mode: 'symlink', overwrite: true
     memory '8 GB'
@@ -205,7 +206,8 @@ process LOO_RNA_eigenMT {
     input:
     tuple val(ID), val (chr)
     path rasqual_eigenMT
-    path all_input
+    path all_input_loo
+    path all_input_full_sample
 
     output:
     tuple val("${ID}"), path("${ID}_${chr}_eigenMT_results.txt")
@@ -220,6 +222,35 @@ process LOO_RNA_eigenMT {
 	    --PHEPOS ${ID}_${chr}_phenotype_position.txt \
         --cis_dist ${params.eqtl_window} \
 	    --OUT ${ID}_${chr}_eigenMT_results.txt
+
+    """
+}
+
+
+process LOO_RNA_eigenMT {
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/loo_RNA_eigenMT_results", mode: 'symlink', overwrite: true
+    memory '8 GB'
+
+    input:
+    tuple val(ID), val (chr)
+    path rasqual_eigenMT
+    path all_input_full_sample
+
+    output:
+    tuple val("${ID}"), path("${ID}_${chr}_eigenMT_results.txt")
+
+    script:
+    """
+
+    eigenMT.py --CHROM ${chr} \
+	    --QTL ${ID}_${chr}_formated_EigenMT.txt \
+	    --GEN ${chr}_genotype.txt \
+	    --GENPOS ${chr}_genotype_position.txt \
+	    --PHEPOS ${chr}_phenotype_position.txt \
+        --cis_dist ${params.eqtl_window} \
+	    --OUT ${ID}_${chr}_eigenMT_results.txt
+
 
     """
 }
