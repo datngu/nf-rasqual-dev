@@ -83,6 +83,8 @@ nextflow.enable.dsl=2
 
 include { LOO_rna_vcf;  LOO_rna; LOO_RNA_PROCESS_covariates; LOO_RNA_SPLIT_chromosome; LOO_RNA_PREPROCESS_rasqual; LOO_RNA_RUN_rasqual_eigenMT; LOO_RNA_rasqual_TO_eigenMT; LOO_RNA_eigenMT_process_input; LOO_RNA_eigenMT; LOO_RNA_MERGE_eigenMT} from './module/loo_RNA'
 
+include { LOO_atac_vcf;  LOO_atac; LOO_ATAC_PROCESS_covariates; LOO_ATAC_SPLIT_chromosome; LOO_ATAC_PREPROCESS_rasqual; LOO_ATAC_RUN_rasqual_eigenMT; LOO_ATAC_rasqual_TO_eigenMT; LOO_ATAC_eigenMT_process_input; LOO_ATAC_eigenMT; LOO_ATAC_MERGE_eigenMT} from './module/loo_ATAC'
+
 workflow {
 
     // channel general processing
@@ -129,6 +131,30 @@ workflow {
         ATAC_eigenMT_permute(chrom_list_ch, ATAC_rasqual_TO_eigenMT_permute.out.collect(), ATAC_eigenMT_process_input.out.collect())
 
         ATAC_MERGE_eigenMT_permute(chrom_list_ch.max(), ATAC_eigenMT_permute.out.collect())
+
+        // Leave one out implementation
+        if(params.loo){
+
+            LOO_atac_vcf(params.meta, ATAC_ADD_AS_vcf.out)
+            LOO_atac(params.meta, ATAC_FILTERING_expression.out)
+            LOO_ATAC_PROCESS_covariates(ID_ch, LOO_meta_csv.out.collect(), LOO_atac.out.collect())
+            LOO_ATAC_SPLIT_chromosome(ID_ch.combine(chrom_list_ch), LOO_atac_vcf.out, LOO_atac.out)
+            
+            LOO_ATAC_PREPROCESS_rasqual( ID_ch.combine(chrom_list_ch), LOO_ATAC_SPLIT_chromosome.out.collect(), params.genome)
+            // run rasqual
+            LOO_ATAC_RUN_rasqual_eigenMT(ID_ch.combine(chrom_list_ch), LOO_ATAC_PREPROCESS_rasqual.out.collect(), LOO_ATAC_SPLIT_chromosome.out.collect(), LOO_ATAC_PROCESS_covariates.out.collect())
+
+            LOO_ATAC_rasqual_TO_eigenMT(ID_ch.combine(chrom_list_ch) , LOO_ATAC_RUN_rasqual_eigenMT.out.map{it[1]}.collect())
+
+            //LOO_ATAC_eigenMT_process_input(ID_ch.combine(chrom_list_ch), LOO_ATAC_SPLIT_chromosome.out.collect())
+
+            //LOO_ATAC_eigenMT(ID_ch.combine(chrom_list_ch), LOO_ATAC_rasqual_TO_eigenMT.out.collect(), LOO_ATAC_eigenMT_process_input.out.collect())
+
+            LOO_ATAC_eigenMT(ID_ch.combine(chrom_list_ch), LOO_ATAC_rasqual_TO_eigenMT.out.collect(), ATAC_eigenMT_process_input.out.collect())
+
+            LOO_ATAC_MERGE_eigenMT(chrom_list_ch.max(), LOO_ATAC_eigenMT.out.groupTuple())
+        }    
+
     }
 
 
