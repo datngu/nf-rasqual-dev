@@ -43,10 +43,9 @@ params.eqtl_window     = 500000
 
 params.atac_qtl          = true
 params.eqtl_qtl          = true
-params.loo               = true
+params.loo               = false
 // control for FDR
 params.eigenMT_fdr       = true
-//params.permute_fdr       = false
 
 
 
