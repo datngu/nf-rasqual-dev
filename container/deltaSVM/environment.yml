@@ -1,0 +1,13 @@
+name: gkmsvm
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+  - biobuilds
+dependencies:
+  ## bioconda packages
+  - bioconda::r-gkmsvm=0.81.0
+  - bioconda::ls-gkm=0.0.1
+  - bioconda::bioconductor-bsgenome.hsapiens.ucsc.hg19.masked
+  - bioconda::trf=4.09.1
+  - argparse
