@@ -25,3 +25,5 @@ ADD environment.yml /
 RUN conda install mamba -n base -c conda-forge -y
 RUN mamba env create -f /environment.yml
 ENV PATH /opt/conda/envs/gkmsvm/bin:$PATH
+
+ADD bsgenome /bsgenome

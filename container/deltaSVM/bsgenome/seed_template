@@ -1,0 +1,18 @@
+Package: BSgenome.Salmo.Salar.Ensembl.106
+Title: Full genome sequences for Salmon Salar
+Description: Full genome sequences for Salmon Salar as provided by Ensembl (release 106) and stored in Biostrings objects.
+Version: 1.0
+organism: Salmon Salar
+common_name: Atlantic Salmon
+provider: Ensembl 
+genome: 3.1
+release_date: 2022
+release_name: Dat T Nguyen
+source_url: http://ftp.ensembl.org/pub/release-106/fasta/salmo_salar/dna/
+organism_biocview: Salmon_Salar 
+BSgenomeObjname: Sapiens 
+seqnames: c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29")
+circ_seqs: ""
+SrcDataFiles: from http://ftp.ensembl.org/pub/release-106/fasta/salmo_salar/dna/
+PkgExamples: genome[["1"]] # same as genome[["1"]]
+seqs_srcdir: PATH_TO_SEQS
