@@ -29,3 +29,8 @@ ENV PATH /opt/conda/envs/gkmsvm/bin:$PATH
 ADD bsgenome /bsgenome
 ADD bin/genNullSeqs_tfr.R /usr/bin/
 ADD bin/trf_dat2bed.py /usr/bin/
+
+RUN wget https://github.com/datngu/data/releases/download/v.0.0.1/BSgenome.Salmo.Salar.Ensembl.106_1.0.tar.gz -O BSgenome.Salmo.Salar.Ensembl.106_1.0.tar.gz
+
+RUN R CMD INSTALL BSgenome.Salmo.Salar.Ensembl.106_1.0.tar.gz
+RUN rm BSgenome.Salmo.Salar.Ensembl.106_1.0.tar.gz

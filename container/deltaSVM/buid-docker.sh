@@ -12,7 +12,11 @@ bash install.sh
 # run tandem repeat finder to find tandem repeat regions
 bash tandem_repeat_finder.sh
 
-
+for chr in {1..29}
+do
+  ./trf_dat2bed.py --dat trf_bed/${chr}.fa.2.7.7.80.10.50.12.dat --bed trf_bed/${chr}.bed
+  cat trf_bed/${chr}.bed >> trf_bed/atlantic_salmon_v3.1_trf.bed
+done
 
 
 
