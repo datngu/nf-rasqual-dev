@@ -88,7 +88,7 @@ include { LOO_rna_vcf;  LOO_rna; LOO_RNA_PROCESS_covariates; LOO_RNA_SPLIT_chrom
 include { LOO_atac_vcf;  LOO_atac; LOO_ATAC_PROCESS_covariates; LOO_ATAC_SPLIT_chromosome; LOO_ATAC_PREPROCESS_rasqual; LOO_ATAC_RUN_rasqual_eigenMT; LOO_ATAC_rasqual_TO_eigenMT; LOO_ATAC_eigenMT_process_input; LOO_ATAC_eigenMT; LOO_ATAC_MERGE_eigenMT} from './module/loo_ATAC'
 
 
-include { ATAC_deltaSVM_slipt_bed } from './module/deltaSVM'
+include { ATAC_deltaSVM_slipt_bed; ATAC_deltaSVM_gen_null_seqs } from './module/deltaSVM'
 
 
 workflow {
@@ -142,7 +142,7 @@ workflow {
         if(params.deltaSVM){
 
             ATAC_deltaSVM_slipt_bed(ATAC_FILTERING_expression.out)
-            //ATAC_FILTERING_expression.out
+            ATAC_deltaSVM_gen_null_seqs(params.trf_bed, ATAC_deltaSVM_slipt_bed.out)
 
         }    
         // Leave one out implementation

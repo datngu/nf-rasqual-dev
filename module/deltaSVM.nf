@@ -32,13 +32,18 @@ process ATAC_deltaSVM_gen_null_seqs {
     memory '16 GB'
 
     input:
-    path atac_filtered
+    path trf_bed
+    path list_atac_bed
     
     output:
-    path "atac_*.txt"
+    path "*.fa"
 
     script:
     """
-    slipt_bed.R $atac_filtered $params.deltaSVM_folds atac_
+    for i in \$(seq 1 $params.deltaSVM_folds)
+    do
+        genNullSeqs_tfr.R bed=atac_\$i.txt trf=$trf_bed bsgenome="BSgenome.Salmo.Salar.Ensembl.106" xfold=1 out_prefix=\$i batchsize=20000 &
+    done
+    wait
     """
 }
