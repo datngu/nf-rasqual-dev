@@ -24,7 +24,8 @@ out_prefix = args[3]
 data = read.table(in_bed)
 data = as.data.frame(data)
 data = data[,c(2,3,4)]
-
+pick = data[,1] %in% as.character(1:29)
+data = data[pick,]
 
 
 data$fold_id = c(1:nrow(data))
