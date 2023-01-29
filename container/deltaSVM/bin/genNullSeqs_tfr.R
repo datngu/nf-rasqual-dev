@@ -23,7 +23,7 @@ genNullSeqs_trf = function(
   repeat_match_tol = 0.02, 
   GC_match_tol = 0.02, 
   length_match_tol = 0.02, 
-  batchsize = 5000, 
+  batchsize = 20000, 
   nMaxTrials = 20
   #genome = NULL  # if genome is provided, genome version is ignored 
 )
@@ -288,9 +288,9 @@ genNullSeqs_trf = function(
 options(stringsAsFactors = FALSE)
 
 args = commandArgs(trailingOnly=TRUE)
-syntax='\nUsage:\t./genNullSeqs_tfr.R bed=path/to/posSeq.bed trf=path/to/trf.bed bsgenome=BSgenome.package.name xfold=n out_prefix="NA"\n\nInput parameters are:\n\tbed: postive seq bed file.\n\ttrf: tandem repeat finder bed file.\n\tbsgenome: BSgenome package name of the target genome, here we use "BSgenome.Salmo.Salar.Ensembl.106"\n\txfold: interger value of xfold ratio: negSet/posSet\n\tout_prefix: output prefix\n\n'
+syntax='\nUsage:\t./genNullSeqs_tfr.R bed=path/to/posSeq.bed trf=path/to/trf.bed bsgenome=BSgenome.package.name xfold=n out_prefix="NA" batchsize=n\n\nInput parameters are:\n\tbed: postive seq bed file.\n\ttrf: tandem repeat finder bed file.\n\tbsgenome: BSgenome package name of the target genome, here we use "BSgenome.Salmo.Salar.Ensembl.106"\n\txfold: interger value of xfold ratio: negSet/posSet\n\tbatchsize: batchsize of sampling NULL sequences\n\tout_prefix: output prefix\n\n'
 
-bed_path = trf_path = bsgenome = xfold = out_prefix = NA
+bed_path = trf_path = bsgenome = xfold = batchsize = out_prefix = NA
 
 if(length(args) == 0 ){
   cat("\nNo argument, Program stop! \n")
@@ -304,6 +304,7 @@ for (i in 1:length(args)){
   if (res[1] == "trf") trf_path = res[2]   
   if (res[1] == "bsgenome") bsgenome = res[2]   
   if (res[1] == "xfold") xfold = as.numeric(res[2])
+  if (res[1] == "batchsize") batchsize = as.numeric(res[2])
   if (res[1] == "out_prefix") out_prefix = res[2]  
 }
 
@@ -330,6 +331,10 @@ if(is.na(xfold)){
   cat("xfold is not found! Use: 1\n\n")
 }
 
+if(is.na(batchsize)){
+  batchsize = 20000
+  cat("xfold is not found! Use: 20000\n\n")
+}
 
 if(is.na(out_prefix)){
   out_prefix = ""
@@ -344,7 +349,7 @@ require(BSgenome)
 #bsgenome="BSgenome.Hsapiens.UCSC.hg19.masked"
 lapply(bsgenome, require, character.only = TRUE)
 
-genNullSeqs_trf(inputBedFN = bed_path, trfBedFN = trf_path, genome = get(bsgenome), xfold = xfold, outputBedFN = outputBedFN , outputPosFastaFN = outputPosFastaFN, outputNegFastaFN = outputNegFastaFN)
+genNullSeqs_trf(inputBedFN = bed_path, trfBedFN = trf_path, genome = get(bsgenome), xfold = xfold, batchsize = batchsize, outputBedFN = outputBedFN , outputPosFastaFN = outputPosFastaFN, outputNegFastaFN = outputNegFastaFN)
 
 cat("DONE!")
 
