@@ -23,7 +23,7 @@ out_prefix = args[3]
 
 data = read.table(in_bed)
 data = as.data.frame(data)
-data = data[,c(2:4)]
+data = data[,c(2,3,4)]
 
 
 
