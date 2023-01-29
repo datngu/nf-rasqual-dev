@@ -61,7 +61,7 @@ process ATAC_deltaSVM_train {
     path list_atac_seqs
     
     output:
-    path "*.fa"
+    path "*.model.txt"
 
     script:
     """
