@@ -48,3 +48,27 @@ process ATAC_deltaSVM_gen_null_seqs {
     wait
     """
 }
+
+
+process ATAC_deltaSVM_train {
+
+    container 'ndatth/delta-svm:v0.0.0'
+    publishDir "${params.outdir}/deltaSVM", mode: 'symlink', overwrite: true
+    memory '96 GB'
+    cpus 16
+
+    input:
+    path list_atac_seqs
+    
+    output:
+    path "*.fa"
+
+    script:
+    """
+    for i in \$(seq 1 $params.deltaSVM_folds)
+    do
+        gkmtrain \${i}_posSet.fa \${i}_negSet.fa \${i} &
+    done
+    wait
+    """
+}
