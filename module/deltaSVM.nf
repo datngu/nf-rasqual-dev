@@ -29,7 +29,8 @@ process ATAC_deltaSVM_gen_null_seqs {
 
     container 'ndatth/delta-svm:v0.0.0'
     publishDir "${params.outdir}/deltaSVM", mode: 'symlink', overwrite: true
-    memory '16 GB'
+    memory '64 GB'
+    cpus 16
 
     input:
     path trf_bed
