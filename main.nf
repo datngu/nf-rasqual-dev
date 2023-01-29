@@ -25,6 +25,7 @@ params.rna_bam         = "$baseDir/data/rna_bam/*.bam"
 params.rna_count       = "$baseDir/data/rna_gene_level_count_salmon.txt"
 params.genotype        = "$baseDir/data/genotype.vcf.gz"
 params.meta            = "$baseDir/data/meta/Brain.csv"
+params.trf_bed         = "$baseDir/data/atlantic_salmon_v3.1_trf.bed"
 params.outdir          = "results"
 params.trace_dir       = "trace_dir"
 
@@ -38,11 +39,13 @@ params.maf             = 0.05
 params.fdr             = 0.1
 params.atac_window     = 10000
 params.eqtl_window     = 500000
+params.deltaSVM_folds  = 10
 
 // pipeline options
 
 params.atac_qtl          = true
 params.eqtl_qtl          = true
+params.deltaSVM          = true
 params.loo               = false
 // control for FDR
 params.eigenMT_fdr       = true
@@ -83,6 +86,10 @@ nextflow.enable.dsl=2
 include { LOO_rna_vcf;  LOO_rna; LOO_RNA_PROCESS_covariates; LOO_RNA_SPLIT_chromosome; LOO_RNA_PREPROCESS_rasqual; LOO_RNA_RUN_rasqual_eigenMT; LOO_RNA_rasqual_TO_eigenMT; LOO_RNA_eigenMT_process_input; LOO_RNA_eigenMT; LOO_RNA_MERGE_eigenMT} from './module/loo_RNA'
 
 include { LOO_atac_vcf;  LOO_atac; LOO_ATAC_PROCESS_covariates; LOO_ATAC_SPLIT_chromosome; LOO_ATAC_PREPROCESS_rasqual; LOO_ATAC_RUN_rasqual_eigenMT; LOO_ATAC_rasqual_TO_eigenMT; LOO_ATAC_eigenMT_process_input; LOO_ATAC_eigenMT; LOO_ATAC_MERGE_eigenMT} from './module/loo_ATAC'
+
+
+include { ATAC_deltaSVM_slipt_bed } from './module/deltaSVM'
+
 
 workflow {
 
@@ -131,6 +138,13 @@ workflow {
 
         ATAC_MERGE_eigenMT_permute(chrom_list_ch.max(), ATAC_eigenMT_permute.out.collect())
 
+        // deltaSVM
+        if(params.deltaSVM){
+
+            ATAC_deltaSVM_slipt_bed(ATAC_FILTERING_expression.out)
+            //ATAC_FILTERING_expression.out
+
+        }    
         // Leave one out implementation
         if(params.loo){
 
