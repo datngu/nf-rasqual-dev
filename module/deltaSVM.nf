@@ -20,7 +20,7 @@ process ATAC_deltaSVM_slipt_bed {
 
     script:
     """
-    slipt_bed.R atac_filtered $params.deltaSVM_folds atac_
+    slipt_bed.R $atac_filtered $params.deltaSVM_folds atac_
     """
 }
 
