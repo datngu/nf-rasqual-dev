@@ -62,11 +62,13 @@ log.info """\
     atac_count          : $params.atac_count
     rna_bam             : $params.rna_bam
     rna_count           : $params.rna_count
-    fpkm_cutoff         : $params.fpkm_cutoff
     genotype            : $params.genotype 
     meta                : $params.meta
     outdir              : $params.outdir
     trace_dir           : $params.trace_dir
+
+    
+    fpkm_cutoff         : $params.fpkm_cutoff
     chrom               : $params.chrom
     permute             : $params.permute
     maf                 : $params.maf
