@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --ntasks=1
 #SBATCH --nodes=1                
-#SBATCH --job-name=Brain   
+#SBATCH --job-name=Liver   
 #SBATCH --mem=4G                
 #SBATCH --partition=gpu
 #SBATCH --mail-user=nguyen.thanh.dat@nmbu.no
