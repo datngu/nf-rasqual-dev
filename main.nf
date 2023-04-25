@@ -99,6 +99,11 @@ include { LOO_atac_vcf;  LOO_atac; LOO_ATAC_PROCESS_covariates; LOO_ATAC_SPLIT_c
 
 include { ATAC_deltaSVM_slipt_bed; ATAC_deltaSVM_gen_null_seqs; ATAC_deltaSVM_train } from './module/deltaSVM'
 
+include { EXTERNAL_LD_SPLIT_chromosome; EXTERNAL_LD_eigenMT_process_input; EXTERNAL_LD_ATAC_eigenMT_process_input } from './module/external_ld'
+
+
+//include {  } from './module/external_ld'
+
 
 workflow {
 
@@ -130,6 +135,13 @@ workflow {
         ATAC_PROCESS_covariates(params.meta, ATAC_FILTERING_expression.out)
         ATAC_SPLIT_chromosome(chrom_list_ch, ATAC_ADD_AS_vcf.out, ATAC_FILTERING_expression.out )
         ATAC_PREPROCESS_rasqual(chrom_list_ch, ATAC_SPLIT_chromosome.out.collect(), params.genome)
+       
+        // standard run
+        ATAC_RUN_rasqual_eigenMT(chrom_list_ch, ATAC_PREPROCESS_rasqual.out.collect(), ATAC_SPLIT_chromosome.out.collect(), ATAC_PROCESS_covariates.out)
+        ATAC_rasqual_TO_eigenMT(chrom_list_ch, ATAC_RUN_rasqual_eigenMT.out.collect())
+        // permutation run
+        ATAC_RUN_rasqual_eigenMT_permute(chrom_list_ch, ATAC_PREPROCESS_rasqual.out.collect(), ATAC_SPLIT_chromosome.out.collect(), ATAC_PROCESS_covariates.out)
+        ATAC_rasqual_TO_eigenMT_permute(chrom_list_ch, ATAC_RUN_rasqual_eigenMT_permute.out.collect())        
         
         // eigenMT
         if(params.external_ld){
@@ -140,14 +152,9 @@ workflow {
         }else{
 
             ATAC_eigenMT_process_input(chrom_list_ch, ATAC_SPLIT_chromosome.out.collect())
-            ATAC_RUN_rasqual_eigenMT(chrom_list_ch, ATAC_PREPROCESS_rasqual.out.collect(), ATAC_SPLIT_chromosome.out.collect(), ATAC_PROCESS_covariates.out)
-            ATAC_rasqual_TO_eigenMT(chrom_list_ch, ATAC_RUN_rasqual_eigenMT.out.collect())
             ATAC_eigenMT(chrom_list_ch, ATAC_rasqual_TO_eigenMT.out.collect(), ATAC_eigenMT_process_input.out.collect())
             ATAC_MERGE_eigenMT(chrom_list_ch.max(), ATAC_eigenMT.out.collect())
         
-                // permutation
-            ATAC_RUN_rasqual_eigenMT_permute(chrom_list_ch, ATAC_PREPROCESS_rasqual.out.collect(), ATAC_SPLIT_chromosome.out.collect(), ATAC_PROCESS_covariates.out)
-            ATAC_rasqual_TO_eigenMT_permute(chrom_list_ch, ATAC_RUN_rasqual_eigenMT_permute.out.collect())
             ATAC_eigenMT_permute(chrom_list_ch, ATAC_rasqual_TO_eigenMT_permute.out.collect(), ATAC_eigenMT_process_input.out.collect())
             ATAC_MERGE_eigenMT_permute(chrom_list_ch.max(), ATAC_eigenMT_permute.out.collect())
         }
@@ -1359,64 +1366,3 @@ process LOO_meta_csv {
 
 // external LD reference for eigenMT
 
-
-process EXTERNAL_LD_SPLIT_chromosome {
-    container 'ndatth/rasqual:v0.0.0'
-    publishDir "${params.outdir}/EXTERNAL_LD_SPLIT_chromosome", mode: 'symlink', overwrite: true
-    memory '8 GB'
-
-    input:
-    val chr
-    path in_vcf
-
-    output:
-    tuple path("${chr}.vcf.gz"), path("${chr}.vcf.gz.tbi")
-
-    script:
-    """
-    bcftools index -t ${in_vcf}
-
-    bcftools view ${in_vcf} --regions $chr -Oz -o ${chr}.vcf.gz
-    bcftools index -t ${chr}.vcf.gz
-    """
-}
-
-
-process EXTERNAL_LD_eigenMT_process_input {
-    container 'ndatth/rasqual:v0.0.0'
-    publishDir "${params.outdir}/EXTERNAL_LD_eigenMT_process_input", mode: 'symlink', overwrite: true
-    memory '8 GB'
-
-    input:
-    val chr
-    path split_chrom
-
-    output:
-    tuple path("${chr}_genotype.txt"), path("${chr}_genotype_position.txt")
-
-    script:
-    """
-    MatrixQTL_genotype_converter.py --vcf ${chr}.vcf.gz --out_genotype ${chr}_genotype.txt --out_genotype_position ${chr}_genotype_position.txt
-    
-    """
-}
-
-
-process EXTERNAL_LD_ATAC_eigenMT_process_input {
-    container 'ndatth/rasqual:v0.0.0'
-    publishDir "${params.outdir}/EXTERNAL_LD_ATAC_eigenMT_process_input", mode: 'symlink', overwrite: true
-    memory '8 GB'
-
-    input:
-    val chr
-    path split_chrom
-
-    output:
-    path ("${chr}_phenotype_position.txt")
-
-    script:
-    """
-    MatrixQTL_ATAC_phenotype_converter.py --count ${chr}_count.txt --out_phenotype ${chr}_phenotype.txt --out_phenotype_position ${chr}_phenotype_position.txt
-
-    """
-}
