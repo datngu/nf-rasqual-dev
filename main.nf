@@ -99,7 +99,7 @@ include { LOO_atac_vcf;  LOO_atac; LOO_ATAC_PROCESS_covariates; LOO_ATAC_SPLIT_c
 
 include { ATAC_deltaSVM_slipt_bed; ATAC_deltaSVM_gen_null_seqs; ATAC_deltaSVM_train } from './module/deltaSVM'
 
-include { EXTERNAL_LD_SPLIT_chromosome; EXTERNAL_LD_eigenMT_process_input; EXTERNAL_LD_ATAC_eigenMT_process_input; EXTERNAL_LD_ATAC_eigenMT; EXTERNAL_LD_ATAC_MERGE_eigenMT } from './module/external_ld'
+include { EXTERNAL_LD_SPLIT_chromosome; EXTERNAL_LD_eigenMT_process_input; EXTERNAL_LD_ATAC_eigenMT_process_input; EXTERNAL_LD_ATAC_eigenMT; EXTERNAL_LD_ATAC_MERGE_eigenMT; EXTERNAL_LD_ATAC_eigenMT_permute; EXTERNAL_LD_ATAC_MERGE_eigenMT_permute } from './module/external_ld_atac'
 
 
 //include {  } from './module/external_ld'
@@ -147,8 +147,14 @@ workflow {
         if(params.external_ld){
             EXTERNAL_LD_eigenMT_process_input(chrom_list_ch, EXTERNAL_LD_SPLIT_chromosome.out.collect())
             EXTERNAL_LD_ATAC_eigenMT_process_input(chrom_list_ch, ATAC_SPLIT_chromosome.out.collect())
+
             EXTERNAL_LD_ATAC_eigenMT(chrom_list_ch, ATAC_rasqual_TO_eigenMT.out.collect(), EXTERNAL_LD_eigenMT_process_input.out.collect(), EXTERNAL_LD_ATAC_eigenMT_process_input.out.collect())
+
             EXTERNAL_LD_ATAC_MERGE_eigenMT(chrom_list_ch.max(), EXTERNAL_LD_ATAC_eigenMT.out.collect())
+
+            EXTERNAL_LD_ATAC_eigenMT_permute(chrom_list_ch, ATAC_rasqual_TO_eigenMT_permute.out.collect(), EXTERNAL_LD_eigenMT_process_input.out.collect(), EXTERNAL_LD_ATAC_eigenMT_process_input.out.collect())
+
+            EXTERNAL_LD_ATAC_MERGE_eigenMT_permute(chrom_list_ch.max(), EXTERNAL_LD_ATAC_eigenMT_permute.out.collect())
 
         }else{
 
@@ -170,31 +176,7 @@ workflow {
             ATAC_deltaSVM_train(ATAC_deltaSVM_gen_null_seqs.out)
 
         }    
-        // Leave one out implementation
-        if(params.loo){
-
-            LOO_atac_vcf(params.meta, ATAC_ADD_AS_vcf.out)
-            LOO_atac(params.meta, ATAC_FILTERING_expression.out)
-            LOO_ATAC_PROCESS_covariates(ID_ch, LOO_meta_csv.out.collect(), LOO_atac.out.collect())
-            LOO_ATAC_SPLIT_chromosome(ID_ch.combine(chrom_list_ch), LOO_atac_vcf.out, LOO_atac.out)
-            
-            LOO_ATAC_PREPROCESS_rasqual( ID_ch.combine(chrom_list_ch), LOO_ATAC_SPLIT_chromosome.out.collect(), params.genome)
-            // run rasqual
-            LOO_ATAC_RUN_rasqual_eigenMT(ID_ch.combine(chrom_list_ch), LOO_ATAC_PREPROCESS_rasqual.out.collect(), LOO_ATAC_SPLIT_chromosome.out.collect(), LOO_ATAC_PROCESS_covariates.out.collect())
-
-            LOO_ATAC_rasqual_TO_eigenMT(ID_ch.combine(chrom_list_ch) , LOO_ATAC_RUN_rasqual_eigenMT.out.map{it[1]}.collect())
-
-            //LOO_ATAC_eigenMT_process_input(ID_ch.combine(chrom_list_ch), LOO_ATAC_SPLIT_chromosome.out.collect())
-
-            //LOO_ATAC_eigenMT(ID_ch.combine(chrom_list_ch), LOO_ATAC_rasqual_TO_eigenMT.out.collect(), LOO_ATAC_eigenMT_process_input.out.collect())
-
-            LOO_ATAC_eigenMT(ID_ch.combine(chrom_list_ch), LOO_ATAC_rasqual_TO_eigenMT.out.collect(), ATAC_eigenMT_process_input.out.collect())
-
-            LOO_ATAC_MERGE_eigenMT(chrom_list_ch.max(), LOO_ATAC_eigenMT.out.groupTuple())
-        }    
-
     }
-
 
     if( params.eqtl_qtl ){
         rna_bam_ch = channel.fromPath( params.rna_bam, checkIfExists: true )
@@ -228,29 +210,6 @@ workflow {
 
         RNA_MERGE_eigenMT_permute(chrom_list_ch.max(), RNA_eigenMT_permute.out.collect())
 
-
-        // Leave one out implementation
-        if(params.loo){
-
-            LOO_rna_vcf(params.meta, RNA_ADD_AS_vcf.out)
-            LOO_rna(params.meta, RNA_FILTERING_expression.out)
-            LOO_RNA_PROCESS_covariates(ID_ch, LOO_meta_csv.out.collect(), LOO_rna.out.collect())
-            LOO_RNA_SPLIT_chromosome(ID_ch.combine(chrom_list_ch), LOO_rna_vcf.out, LOO_rna.out)
-            
-            LOO_RNA_PREPROCESS_rasqual( ID_ch.combine(chrom_list_ch), LOO_RNA_SPLIT_chromosome.out.collect(), params.genome)
-            // run rasqual
-            LOO_RNA_RUN_rasqual_eigenMT(ID_ch.combine(chrom_list_ch), LOO_RNA_PREPROCESS_rasqual.out.collect(), LOO_RNA_SPLIT_chromosome.out.collect(), LOO_RNA_PROCESS_covariates.out.collect())
-
-            LOO_RNA_rasqual_TO_eigenMT(ID_ch.combine(chrom_list_ch) , LOO_RNA_RUN_rasqual_eigenMT.out.map{it[1]}.collect())
-
-            //LOO_RNA_eigenMT_process_input(ID_ch.combine(chrom_list_ch), LOO_RNA_SPLIT_chromosome.out.collect())
-
-            //LOO_RNA_eigenMT(ID_ch.combine(chrom_list_ch), LOO_RNA_rasqual_TO_eigenMT.out.collect(), LOO_RNA_eigenMT_process_input.out.collect())
-
-            LOO_RNA_eigenMT(ID_ch.combine(chrom_list_ch), LOO_RNA_rasqual_TO_eigenMT.out.collect(), RNA_eigenMT_process_input.out.collect())
-
-            LOO_RNA_MERGE_eigenMT(chrom_list_ch.max(), LOO_RNA_eigenMT.out.groupTuple())
-        }    
     }
 }
 

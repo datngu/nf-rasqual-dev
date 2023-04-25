@@ -48,9 +48,9 @@ process EXTERNAL_LD_eigenMT_process_input {
 }
 
 
-process EXTERNAL_LD_ATAC_eigenMT_process_input {
+process EXTERNAL_LD_ATAC_eigenMT__permuteprocess_input {
     container 'ndatth/rasqual:v0.0.0'
-    publishDir "${params.outdir}/EXTERNAL_LD_ATAC_eigenMT_process_input", mode: 'symlink', overwrite: true
+    publishDir "${params.outdir}/EXTERNAL_LD_ATAC_eigenMT__permuteprocess_input", mode: 'symlink', overwrite: true
     memory '8 GB'
 
     input:
@@ -69,32 +69,9 @@ process EXTERNAL_LD_ATAC_eigenMT_process_input {
 
 
 
-process EXTERNAL_LD_ATAC_RUN_rasqual_eigenMT {
-    container 'ndatth/rasqual:v0.0.0'
-    publishDir "${params.outdir}/ATAC_results_rasqual_eigenMT", mode: 'symlink', overwrite: true
-    memory '64 GB'
-    cpus 16
-
-    input:
-    val chr
-    path preproces_data
-    path split_chrom
-    path covariates
-
-    output:
-    path("${chr}_rasqual_all_snp.txt")
 
 
-    script:
-    """
-    echo \$HOSTNAME
-    rasqual_eigenMT.R vcf=${chr}.vcf.gz y=${chr}_atac.exp.bin k=${chr}_atac.size_factors.bin x=atac.covs_all_chrom.bin x_txt=atac.covs_all_chrom.txt meta=${chr}_snp_counts.tsv out=${chr}_rasqual_all_snp.txt cpu=${task.cpus}
-    """
-}
-
-
-
-process EXTERNAL_LD_ATAC_eigenMT {
+process EXTERNAL_LD_ATAC_eigenMT _permute{
     container 'ndatth/rasqual:v0.0.0'
     publishDir "${params.outdir}/EXTERNAL_LD_ATAC_eigenMT_results", mode: 'symlink', overwrite: true
     memory '8 GB'
@@ -151,3 +128,63 @@ process EXTERNAL_LD_ATAC_MERGE_eigenMT {
     """
 }
 
+
+
+process EXTERNAL_LD_ATAC_eigenMT_permute {
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/EXTERNAL_LD_ATAC_eigenMT_permute", mode: 'symlink', overwrite: true
+    memory '8 GB'
+
+    input:
+    val chr
+    path rasqual_eigenMT
+    path genotype_input
+    path phenotype_input
+
+    output:
+    path("${chr}_eigenMT_results.txt")
+
+    script:
+    """
+
+    eigenMT.py --CHROM ${chr} \
+	    --QTL ${chr}_formated_EigenMT.txt \
+	    --GEN ${chr}_genotype.txt \
+	    --GENPOS ${chr}_genotype_position.txt \
+	    --PHEPOS ${chr}_phenotype_position.txt \
+        --cis_dist ${params.atac_window} \
+	    --OUT ${chr}_eigenMT_results.txt \
+        --external
+
+    """
+}
+
+
+
+
+
+process EXTERNAL_LD_ATAC_MERGE_eigenMT_permute {
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/EXTERNAL_LD_ATAC_eigenMT__permuteresults_merged_permute", mode: 'copy', overwrite: true
+    memory '8 GB'
+    cpus 1
+
+    input:
+    val max_chr
+    path results
+
+    output:
+    path("ALL_eigenMT_results.txt")
+
+
+    script:
+    """
+    
+    cat 1_eigenMT_results.txt > ALL_eigenMT_results.txt
+    ## exclude header
+    for chr in \$(seq 2 $max_chr)
+    do
+        awk 'NR!=1' \${chr}_eigenMT_results.txt >> ALL_eigenMT_results.txt
+    done
+    """
+}
