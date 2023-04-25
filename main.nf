@@ -147,7 +147,8 @@ workflow {
         if(params.external_ld){
             EXTERNAL_LD_eigenMT_process_input(chrom_list_ch, EXTERNAL_LD_SPLIT_chromosome.out.collect())
             EXTERNAL_LD_ATAC_eigenMT_process_input(chrom_list_ch, ATAC_SPLIT_chromosome.out.collect())
-
+            EXTERNAL_LD_ATAC_eigenMT(chrom_list_ch, ATAC_rasqual_TO_eigenMT.out.collect(), EXTERNAL_LD_eigenMT_process_input.out.collect(), EXTERNAL_LD_ATAC_eigenMT_process_input.out.collect())
+            EXTERNAL_LD_ATAC_MERGE_eigenMT(chrom_list_ch.max(), EXTERNAL_LD_ATAC_eigenMT.out.collect())
 
         }else{
 

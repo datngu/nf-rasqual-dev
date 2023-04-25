@@ -91,3 +91,63 @@ process EXTERNAL_LD_ATAC_RUN_rasqual_eigenMT {
     rasqual_eigenMT.R vcf=${chr}.vcf.gz y=${chr}_atac.exp.bin k=${chr}_atac.size_factors.bin x=atac.covs_all_chrom.bin x_txt=atac.covs_all_chrom.txt meta=${chr}_snp_counts.tsv out=${chr}_rasqual_all_snp.txt cpu=${task.cpus}
     """
 }
+
+
+
+process EXTERNAL_LD_ATAC_eigenMT {
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/EXTERNAL_LD_ATAC_eigenMT_results", mode: 'symlink', overwrite: true
+    memory '8 GB'
+
+    input:
+    val chr
+    path rasqual_eigenMT
+    path genotype_input
+    path phenotype_input
+
+    output:
+    path("${chr}_eigenMT_results.txt")
+
+    script:
+    """
+
+    eigenMT.py --CHROM ${chr} \
+	    --QTL ${chr}_formated_EigenMT.txt \
+	    --GEN ${chr}_genotype.txt \
+	    --GENPOS ${chr}_genotype_position.txt \
+	    --PHEPOS ${chr}_phenotype_position.txt \
+        --cis_dist ${params.atac_window} \
+	    --OUT ${chr}_eigenMT_results.txt \
+        --external True
+
+    """
+}
+
+
+
+process EXTERNAL_LD_ATAC_MERGE_eigenMT {
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/EXTERNAL_LD_ATAC_eigenMT_results_merged", mode: 'copy', overwrite: true
+    memory '8 GB'
+    cpus 1
+
+    input:
+    val max_chr
+    path results
+
+    output:
+    path("ALL_eigenMT_results.txt")
+
+
+    script:
+    """
+    
+    cat 1_eigenMT_results.txt > ALL_eigenMT_results.txt
+    ## exclude header
+    for chr in \$(seq 2 $max_chr)
+    do
+        awk 'NR!=1' \${chr}_eigenMT_results.txt >> ALL_eigenMT_results.txt
+    done
+    """
+}
+
