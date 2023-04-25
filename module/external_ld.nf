@@ -118,7 +118,7 @@ process EXTERNAL_LD_ATAC_eigenMT {
 	    --PHEPOS ${chr}_phenotype_position.txt \
         --cis_dist ${params.atac_window} \
 	    --OUT ${chr}_eigenMT_results.txt \
-        --external True
+        --external
 
     """
 }
