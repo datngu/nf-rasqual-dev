@@ -125,7 +125,7 @@ process EXTERNAL_LD_RNA_eigenMT_permute {
 
 process EXTERNAL_LD_RNA_MERGE_eigenMT_permute {
     container 'ndatth/rasqual:v0.0.0'
-    publishDir "${params.outdir}/EXTERNAL_LD_RNA_eigenMT_permuteresults_merged_permute", mode: 'copy', overwrite: true
+    publishDir "${params.outdir}/EXTERNAL_LD_RNA_eigenMT_merged_permute", mode: 'copy', overwrite: true
     memory '8 GB'
     cpus 1
 
