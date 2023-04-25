@@ -204,12 +204,12 @@ def make_test_dict_external(QTL_fh, gen_dict, genpos_dict, phepos_dict, cis_dist
                             test_dict[gene]['line'] = '\t'.join(line)
 
     QTL.close()
-    snps = np.array(genpos_dict.values())
+    snps = np.array(list(genpos_dict.values()))
     for gene in test_dict:
         phepos = phepos_dict[gene]
         #Calculate distances to phenotype start and end positions
-        is_in_cis_start = abs(snps - float(phepos[0])) <= cis_dist
-        is_in_cis_end = abs(snps - float(phepos[1])) <= cis_dist
+        is_in_cis_start = abs(snps - phepos[0]) <= cis_dist
+        is_in_cis_end = abs(snps - phepos[1]) <= cis_dist
         test_dict[gene]['snps'] = snps[is_in_cis_start | is_in_cis_end]
     return test_dict, "\t".join(header)
 
