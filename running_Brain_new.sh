@@ -55,7 +55,8 @@ run_nextflow () {
       --genotype $genotype \
       --outdir $nextflow_res_dir \
       --trace_dir $nextflow_trace_dir \
-      --ld_genotype $ld_genotype
+      --ld_genotype $ld_genotype \
+      --external_ld true
 }
 
 #tissue_list="Brain Gill Gonad Liver Muscle"
