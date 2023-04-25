@@ -71,7 +71,7 @@ process EXTERNAL_LD_ATAC_eigenMT__permuteprocess_input {
 
 
 
-process EXTERNAL_LD_ATAC_eigenMT _permute{
+process EXTERNAL_LD_ATAC_eigenMT_permute{
     container 'ndatth/rasqual:v0.0.0'
     publishDir "${params.outdir}/EXTERNAL_LD_ATAC_eigenMT_results", mode: 'symlink', overwrite: true
     memory '8 GB'
