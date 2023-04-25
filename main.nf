@@ -145,20 +145,14 @@ workflow {
             ATAC_eigenMT(chrom_list_ch, ATAC_rasqual_TO_eigenMT.out.collect(), ATAC_eigenMT_process_input.out.collect())
             ATAC_MERGE_eigenMT(chrom_list_ch.max(), ATAC_eigenMT.out.collect())
         
+                // permutation
+            ATAC_RUN_rasqual_eigenMT_permute(chrom_list_ch, ATAC_PREPROCESS_rasqual.out.collect(), ATAC_SPLIT_chromosome.out.collect(), ATAC_PROCESS_covariates.out)
+            ATAC_rasqual_TO_eigenMT_permute(chrom_list_ch, ATAC_RUN_rasqual_eigenMT_permute.out.collect())
+            ATAC_eigenMT_permute(chrom_list_ch, ATAC_rasqual_TO_eigenMT_permute.out.collect(), ATAC_eigenMT_process_input.out.collect())
+            ATAC_MERGE_eigenMT_permute(chrom_list_ch.max(), ATAC_eigenMT_permute.out.collect())
         }
 
 
-
-
-
-        // permutation
-        ATAC_RUN_rasqual_eigenMT_permute(chrom_list_ch, ATAC_PREPROCESS_rasqual.out.collect(), ATAC_SPLIT_chromosome.out.collect(), ATAC_PROCESS_covariates.out)
-
-        ATAC_rasqual_TO_eigenMT_permute(chrom_list_ch, ATAC_RUN_rasqual_eigenMT_permute.out.collect())
-
-        ATAC_eigenMT_permute(chrom_list_ch, ATAC_rasqual_TO_eigenMT_permute.out.collect(), ATAC_eigenMT_process_input.out.collect())
-
-        ATAC_MERGE_eigenMT_permute(chrom_list_ch.max(), ATAC_eigenMT_permute.out.collect())
 
         // deltaSVM
         if(params.deltaSVM){
