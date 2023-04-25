@@ -99,7 +99,7 @@ include { LOO_atac_vcf;  LOO_atac; LOO_ATAC_PROCESS_covariates; LOO_ATAC_SPLIT_c
 
 include { ATAC_deltaSVM_slipt_bed; ATAC_deltaSVM_gen_null_seqs; ATAC_deltaSVM_train } from './module/deltaSVM'
 
-include { EXTERNAL_LD_SPLIT_chromosome; EXTERNAL_LD_eigenMT_process_input; EXTERNAL_LD_ATAC_eigenMT_process_input } from './module/external_ld'
+include { EXTERNAL_LD_SPLIT_chromosome; EXTERNAL_LD_eigenMT_process_input; EXTERNAL_LD_ATAC_eigenMT_process_input; EXTERNAL_LD_ATAC_eigenMT; EXTERNAL_LD_ATAC_MERGE_eigenMT } from './module/external_ld'
 
 
 //include {  } from './module/external_ld'
