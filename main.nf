@@ -24,6 +24,7 @@ params.atac_count      = "$baseDir/data/atac_consensus_peak_featureCounts.txt"
 params.rna_bam         = "$baseDir/data/rna_bam/*.bam"
 params.rna_count       = "$baseDir/data/rna_gene_level_count_salmon.txt"
 params.genotype        = "$baseDir/data/genotype.vcf.gz"
+params.ld_genotype     = "$baseDir/data/ld_genotype.vcf.gz"
 params.meta            = "$baseDir/data/meta/Brain.csv"
 params.trf_bed         = "$baseDir/data/atlantic_salmon_v3.1_trf.bed"
 params.outdir          = "results"
@@ -45,9 +46,11 @@ params.deltaSVM_folds  = 10
 
 params.atac_qtl          = true
 params.eqtl_qtl          = true
+external_ld              = false
 params.deltaSVM          = true
-params.loo               = false
+
 // control for FDR
+params.loo               = false
 params.eigenMT_fdr       = true
 
 
@@ -62,7 +65,8 @@ log.info """\
     atac_count          : $params.atac_count
     rna_bam             : $params.rna_bam
     rna_count           : $params.rna_count
-    genotype            : $params.genotype 
+    genotype            : $params.genotype
+    ld_genotype         : $params.ld_genotype 
     meta                : $params.meta
     outdir              : $params.outdir
     trace_dir           : $params.trace_dir
@@ -76,8 +80,11 @@ log.info """\
     eqtl_window         : $params.eqtl_window
     atac_window         : $params.atac_window
     phenotype_PCs       : $params.phenotype_PCs
+
     atac_qtl            : $params.atac_qtl
     eqtl_qtl            : $params.eqtl_qtl
+    external_ld         : $params.external_ld
+    deltaSVM            : $params.deltaSVM
 ================================================================
 """
 
@@ -107,6 +114,11 @@ workflow {
         ID_ch = LOO_meta_csv.out.map{ infile -> tuple( infile.baseName) }.flatten()
     }
 
+    // external LD
+    if(params.external_ld){
+        EXTERNAL_LD_SPLIT_chromosome(chrom_list_ch, params.ld_genotype)
+    }
+
 
     // ATAC QTL
     if( params.atac_qtl ){
@@ -120,16 +132,24 @@ workflow {
         ATAC_PREPROCESS_rasqual(chrom_list_ch, ATAC_SPLIT_chromosome.out.collect(), params.genome)
         
         // eigenMT
+        if(params.external_ld){
+            EXTERNAL_LD_eigenMT_process_input(chrom_list_ch, EXTERNAL_LD_SPLIT_chromosome.out.collect())
+            EXTERNAL_LD_ATAC_eigenMT_process_input(chrom_list_ch, ATAC_SPLIT_chromosome.out.collect())
 
-        ATAC_eigenMT_process_input(chrom_list_ch, ATAC_SPLIT_chromosome.out.collect())
 
-        ATAC_RUN_rasqual_eigenMT(chrom_list_ch, ATAC_PREPROCESS_rasqual.out.collect(), ATAC_SPLIT_chromosome.out.collect(), ATAC_PROCESS_covariates.out)
+        }else{
 
-        ATAC_rasqual_TO_eigenMT(chrom_list_ch, ATAC_RUN_rasqual_eigenMT.out.collect())
+            ATAC_eigenMT_process_input(chrom_list_ch, ATAC_SPLIT_chromosome.out.collect())
+            ATAC_RUN_rasqual_eigenMT(chrom_list_ch, ATAC_PREPROCESS_rasqual.out.collect(), ATAC_SPLIT_chromosome.out.collect(), ATAC_PROCESS_covariates.out)
+            ATAC_rasqual_TO_eigenMT(chrom_list_ch, ATAC_RUN_rasqual_eigenMT.out.collect())
+            ATAC_eigenMT(chrom_list_ch, ATAC_rasqual_TO_eigenMT.out.collect(), ATAC_eigenMT_process_input.out.collect())
+            ATAC_MERGE_eigenMT(chrom_list_ch.max(), ATAC_eigenMT.out.collect())
+        
+        }
 
-        ATAC_eigenMT(chrom_list_ch, ATAC_rasqual_TO_eigenMT.out.collect(), ATAC_eigenMT_process_input.out.collect())
 
-        ATAC_MERGE_eigenMT(chrom_list_ch.max(), ATAC_eigenMT.out.collect())
+
+
 
         // permutation
         ATAC_RUN_rasqual_eigenMT_permute(chrom_list_ch, ATAC_PREPROCESS_rasqual.out.collect(), ATAC_SPLIT_chromosome.out.collect(), ATAC_PROCESS_covariates.out)
@@ -1339,5 +1359,70 @@ process LOO_meta_csv {
     script:
     """
     loo_meta.R $meta
+    """
+}
+
+
+// external LD reference for eigenMT
+
+
+process EXTERNAL_LD_SPLIT_chromosome {
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/EXTERNAL_LD_SPLIT_chromosome", mode: 'symlink', overwrite: true
+    memory '8 GB'
+
+    input:
+    val chr
+    path in_vcf
+
+    output:
+    tuple path("${chr}.vcf.gz"), path("${chr}.vcf.gz.tbi")
+
+    script:
+    """
+    bcftools index -t ${in_vcf}
+
+    bcftools view ${in_vcf} --regions $chr -Oz -o ${chr}.vcf.gz
+    bcftools index -t ${chr}.vcf.gz
+    """
+}
+
+
+process EXTERNAL_LD_eigenMT_process_input {
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/EXTERNAL_LD_eigenMT_process_input", mode: 'symlink', overwrite: true
+    memory '8 GB'
+
+    input:
+    val chr
+    path split_chrom
+
+    output:
+    tuple path("${chr}_genotype.txt"), path("${chr}_genotype_position.txt")
+
+    script:
+    """
+    MatrixQTL_genotype_converter.py --vcf ${chr}.vcf.gz --out_genotype ${chr}_genotype.txt --out_genotype_position ${chr}_genotype_position.txt
+    
+    """
+}
+
+
+process EXTERNAL_LD_ATAC_eigenMT_process_input {
+    container 'ndatth/rasqual:v0.0.0'
+    publishDir "${params.outdir}/EXTERNAL_LD_ATAC_eigenMT_process_input", mode: 'symlink', overwrite: true
+    memory '8 GB'
+
+    input:
+    val chr
+    path split_chrom
+
+    output:
+    path ("${chr}_phenotype_position.txt")
+
+    script:
+    """
+    MatrixQTL_ATAC_phenotype_converter.py --count ${chr}_count.txt --out_phenotype ${chr}_phenotype.txt --out_phenotype_position ${chr}_phenotype_position.txt
+
     """
 }
