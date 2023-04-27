@@ -67,7 +67,7 @@ process ATAC_deltaSVM_train {
     """
     for i in \$(seq 1 $params.deltaSVM_folds)
     do
-        gkmtrain \${i}_posSet.fa \${i}_negSet.fa \${i} &
+        gkmtrain \${i}_posSet.fa \${i}_negSet.fa \${i} -l 10 -k 7 -d 3 &
     done
     wait
     """
@@ -109,7 +109,7 @@ process ATAC_deltaSVM_gen_10mers {
 
     script:
     """
-        nrkmers.py 11 nr10mers.fa
+        nrkmers.py 10 nr10mers.fa
     """
 }
 

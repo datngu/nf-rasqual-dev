@@ -26,6 +26,8 @@ run_nextflow () {
   meta_file=/mnt/ScratchProjects/Aqua-Faang/dat_projects/paper1/data/salmon/meta/${tis}.csv
   # genotype
   genotype=/mnt/ScratchProjects/Aqua-Faang/dat_projects/paper1/data/salmon/WGS/genotype_new.vcf.gz
+  # LD genotype
+  ld_genotype=/mnt/project/Aqua-Faang/dat/wgs_504/ALL_chrome_phased_filtered_HWE_1e6_biSNPs.vcf.gz
   # atac
   atac_bam=/mnt/ScratchProjects/Aqua-Faang/dat_projects/paper1/data/salmon/${tis}/atac_bam/*{.bam,.bai}
   atac_count=/mnt/ScratchProjects/Aqua-Faang/dat_projects/paper1/data/salmon/${tis}/atac_consensus_peak_featureCounts.txt
@@ -42,7 +44,19 @@ run_nextflow () {
   # cd nf-rasqual-dev
   git pull
   export NXF_SINGULARITY_CACHEDIR=/mnt/users/ngda/sofware/singularity
-  nextflow run main.nf -resume -w $nextflow_work_dir --meta $meta_file --genome $genome --annotation $annotation --atac_bam $atac_bam --atac_count $atac_count --rna_bam $rna_bam --rna_count $rna_count --genotype $genotype --outdir $nextflow_res_dir --trace_dir $nextflow_trace_dir
+  nextflow run main.nf -resume -w $nextflow_work_dir \
+      --meta $meta_file \
+      --genome $genome \
+      --annotation $annotation \
+      --atac_bam $atac_bam \
+      --atac_count $atac_count \
+      --rna_bam $rna_bam \
+      --rna_count $rna_count \
+      --genotype $genotype \
+      --outdir $nextflow_res_dir \
+      --trace_dir $nextflow_trace_dir \
+      --ld_genotype $ld_genotype \
+      --external_ld true
 }
 
 #tissue_list="Brain Gill Gonad Liver Muscle"
