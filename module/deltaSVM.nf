@@ -72,3 +72,65 @@ process ATAC_deltaSVM_train {
     wait
     """
 }
+
+
+process ATAC_deltaSVM_merge_models {
+
+    container 'ndatth/delta-svm:v0.0.0'
+    publishDir "${params.outdir}/deltaSVM", mode: 'symlink', overwrite: true
+    memory '8 GB'
+    cpus 1
+
+    input:
+    path list_models
+    
+    output:
+    path "all_model_merged.txt"
+
+    script:
+    """
+        merge_lsgkm_models.py *.model.txt > all_model_merged.txt
+    """
+}
+
+
+process ATAC_deltaSVM_gen_10mers {
+
+    container 'ndatth/delta-svm:v0.0.0'
+    publishDir "${params.outdir}/deltaSVM", mode: 'symlink', overwrite: true
+    memory '8 GB'
+    cpus 1
+
+    input:
+
+
+    output:
+    path "nr10mers.fa"
+
+    script:
+    """
+        nrkmers.py 10 nr10_mers.fa
+    """
+}
+
+
+
+process ATAC_deltaSVM_score_10mers {
+
+    container 'ndatth/delta-svm:v0.0.0'
+    publishDir "${params.outdir}/deltaSVM", mode: 'symlink', overwrite: true
+    memory '8 GB'
+    cpus 1
+
+    input:
+    path "all_model_merged.txt"
+    path "nr10mers.fa"
+
+    output:
+    path "nr10mer_scores.txt"
+
+    script:
+    """
+        gkmpredict nr10_mers.fa all_model_merged.txt nr10mer_scores.txt
+    """
+}
