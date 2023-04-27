@@ -1,4 +1,6 @@
-#!/usr/local/bin/python
+#!/usr/bin/python
+
+
 """
 	nrkmers.py: generate all possible non-redundant k-mers
 
