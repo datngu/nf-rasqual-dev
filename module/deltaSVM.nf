@@ -134,7 +134,7 @@ process ATAC_deltaSVM_score_10mers {
         
         for i in \$(seq 1 $params.deltaSVM_folds)
         do
-        gkmpredict "nr10mers.fa" *.model.txt "\${i}_nr10mer_scores.txt" &
+        gkmpredict "nr10mers.fa" "\${i}.model.txt" "\${i}_nr10mer_scores.txt" &
         done
         wait
 
