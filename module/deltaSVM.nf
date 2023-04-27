@@ -109,7 +109,7 @@ process ATAC_deltaSVM_gen_10mers {
 
     script:
     """
-        nrkmers.py 10 nr10mers.fa
+        nrkmers.py 11 nr10mers.fa
     """
 }
 
