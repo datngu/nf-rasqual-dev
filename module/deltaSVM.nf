@@ -109,8 +109,7 @@ process ATAC_deltaSVM_gen_10mers {
 
     script:
     """
-        nrkmers.py 10 nr10_mers.fa
-    """
+        nrkmers.py 10 nr10mers.fa
 }
 
 
@@ -131,6 +130,6 @@ process ATAC_deltaSVM_score_10mers {
 
     script:
     """
-        gkmpredict nr10_mers.fa all_model_merged.txt nr10mer_scores.txt
+        gkmpredict "nr10mers.fa" "all_model_merged.txt" "nr10mer_scores.txt"
     """
 }
