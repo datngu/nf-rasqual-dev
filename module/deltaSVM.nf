@@ -119,18 +119,24 @@ process ATAC_deltaSVM_score_10mers {
 
     container 'ndatth/delta-svm:v0.0.0'
     publishDir "${params.outdir}/deltaSVM", mode: 'symlink', overwrite: true
-    memory '8 GB'
-    cpus 1
+    memory '96 GB'
+    cpus 16
 
     input:
-    path "all_model_merged.txt"
+    path models
     path "nr10mers.fa"
 
     output:
-    path "nr10mer_scores.txt"
+    path "*_nr10mer_scores.txt"
 
     script:
     """
-        gkmpredict "nr10mers.fa" "all_model_merged.txt" "nr10mer_scores.txt"
+        
+        for i in \$(seq 1 $params.deltaSVM_folds)
+        do
+        gkmpredict "nr10mers.fa" *.model.txt "\${i}_nr10mer_scores.txt" &
+        done
+        wait
+
     """
 }

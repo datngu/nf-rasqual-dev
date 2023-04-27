@@ -182,9 +182,9 @@ workflow {
             ATAC_deltaSVM_slipt_bed(ATAC_FILTERING_expression.out)
             ATAC_deltaSVM_gen_null_seqs(params.trf_bed, ATAC_deltaSVM_slipt_bed.out)
             ATAC_deltaSVM_train(ATAC_deltaSVM_gen_null_seqs.out)
-            ATAC_deltaSVM_merge_models(ATAC_deltaSVM_train.out)
+            //ATAC_deltaSVM_merge_models(ATAC_deltaSVM_train.out)
             ATAC_deltaSVM_gen_10mers()
-            ATAC_deltaSVM_score_10mers(ATAC_deltaSVM_merge_models.out,ATAC_deltaSVM_gen_10mers.out)
+            ATAC_deltaSVM_score_10mers(ATAC_deltaSVM_train.out,ATAC_deltaSVM_gen_10mers.out)
 
         }    
     }
