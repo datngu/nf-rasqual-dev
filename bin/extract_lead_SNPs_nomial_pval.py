@@ -33,7 +33,7 @@ for l in fi_norm:
         tokens = l.split("\t")
         key = tokens[1]
         val = tokens[0] + "__" + tokens[1]
-        if lead_snps[key] == val:
+        if lead_snps.get(key, 'NA') == val:
             print(l[:-1])
 
 
