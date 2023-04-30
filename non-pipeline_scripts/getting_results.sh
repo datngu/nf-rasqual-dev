@@ -9,8 +9,11 @@ for tis in $tissue_list
 do 
     mkdir res_collected/$tis
     
-    cp $tis/ATAC_eigenMT_results_merged/ALL_eigenMT_results.txt res_collected/$tis/obs_atac_rasqual_eigenMT_pval.txt
-    cp $tis/ATAC_eigenMT_results_merged_permute/ALL_eigenMT_results.txt res_collected/$tis/nul_atac_rasqual_eigenMT_pval.txt
+    cp $tis/EXTERNAL_LD_ATAC_eigenMT_results_merged/ALL_eigenMT_results.txt res_collected/$tis/nul_atac_rasqual_eigenMT_pval.txt
+    cp $tis/EXTERNAL_LD_ATAC_eigenMT_merged_permute/ALL_eigenMT_results.txt res_collected/$tis/nul_atac_rasqual_eigenMT_pval.txt
+
+
+
     
     cp $tis/RNA_eigenMT_results_merged/ALL_eigenMT_results.txt res_collected/$tis/obs_rna_rasqual_eigenMT_pval.txt
     cp $tis/RNA_eigenMT_results_merged_permute/ALL_eigenMT_results.txt res_collected/$tis/nul_rna_rasqual_eigenMT_pval.txt
