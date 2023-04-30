@@ -1,9 +1,8 @@
-#cd /mnt/ScratchProjects/Aqua-Faang/dat_projects/paper1/results
-cd /mnt/ScratchProjects/Aqua-Faang/dat_projects/paper1/new_results
+cd /mnt/ScratchProjects/Aqua-Faang/dat_projects/paper1/results
 rm -rf res_collected
 mkdir res_collected
 
-tissue_list="Brain Liver"
+tissue_list="Brain Gill Gonad Liver Muscle"
 
 for tis in $tissue_list
 do 
@@ -34,4 +33,4 @@ done
 
 rm res_collected/*/*rasqual_normial_pval.txt
 
-# get -r /mnt/ScratchProjects/Aqua-Faang/dat_projects/paper1/new_results/res_collected /Users/datn/DATA_ANALYSES/aqua_fang_QTL
+# get -r /mnt/ScratchProjects/Aqua-Faang/dat_projects/paper1/results/res_collected /Users/datn/DATA_ANALYSES/aqua_fang_QTL

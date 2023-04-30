@@ -99,7 +99,7 @@ nextflow.enable.dsl=2
 
 include { ATAC_deltaSVM_slipt_bed; ATAC_deltaSVM_gen_null_seqs; ATAC_deltaSVM_train; ATAC_deltaSVM_merge_models; ATAC_deltaSVM_gen_10mers; ATAC_deltaSVM_score_10mers } from './module/deltaSVM'
 
-include { EXTERNAL_LD_SPLIT_chromosome; EXTERNAL_LD_eigenMT_process_input; EXTERNAL_LD_ATAC_eigenMT_process_input; EXTERNAL_LD_ATAC_eigenMT; EXTERNAL_LD_ATAC_MERGE_eigenMT; EXTERNAL_LD_ATAC_eigenMT_permute; EXTERNAL_LD_ATAC_MERGE_eigenMT_permute } from './module/external_ld_atac'
+include { EXTERNAL_LD_SPLIT_chromosome; EXTERNAL_LD_eigenMT_process_input; EXTERNAL_LD_ATAC_eigenMT_process_input; EXTERNAL_LD_ATAC_eigenMT; EXTERNAL_LD_ATAC_MERGE_eigenMT; EXTERNAL_LD_ATAC_eigenMT_permute; EXTERNAL_LD_ATAC_MERGE_eigenMT_permute; EXTERNAL_LD_ATAC_MERGE_rasqual_normial; EXTERNAL_LD_ATAC_MERGE_rasqual_normial_permute; EXTERNAL_LD_ATAC_GET_lead_SNP; EXTERNAL_LD_ATAC_GET_lead_SNP_permute } from './module/external_ld_atac'
 
 include { EXTERNAL_LD_RNA_eigenMT_process_input; EXTERNAL_LD_RNA_eigenMT; EXTERNAL_LD_RNA_MERGE_eigenMT; EXTERNAL_LD_RNA_eigenMT_permute; EXTERNAL_LD_RNA_MERGE_eigenMT_permute } from './module/external_ld_rna'
 
@@ -158,10 +158,17 @@ workflow {
 
             EXTERNAL_LD_ATAC_MERGE_eigenMT(chrom_list_ch.max(), EXTERNAL_LD_ATAC_eigenMT.out.collect())
 
+            EXTERNAL_LD_ATAC_MERGE_rasqual_normial(EXTERNAL_LD_ATAC_eigenMT_process_input.out.collect())
+
+            EXTERNAL_LD_ATAC_GET_lead_SNP(EXTERNAL_LD_ATAC_MERGE_eigenMT.out, EXTERNAL_LD_ATAC_MERGE_rasqual_normial.out)
+
             // permute
             EXTERNAL_LD_ATAC_eigenMT_permute(chrom_list_ch, ATAC_rasqual_TO_eigenMT_permute.out.collect(), EXTERNAL_LD_eigenMT_process_input.out.collect(), EXTERNAL_LD_ATAC_eigenMT_process_input.out.collect())
 
             EXTERNAL_LD_ATAC_MERGE_eigenMT_permute(chrom_list_ch.max(), EXTERNAL_LD_ATAC_eigenMT_permute.out.collect())
+
+            EXTERNAL_LD_ATAC_MERGE_rasqual_normial_permute(EXTERNAL_LD_ATAC_eigenMT_permute.out.collect())
+            EXTERNAL_LD_ATAC_GET_lead_SNP_permute(EXTERNAL_LD_ATAC_MERGE_eigenMT_permute.out, EXTERNAL_LD_ATAC_MERGE_rasqual_normial_permute.out)
 
         }else{
 
