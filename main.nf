@@ -158,7 +158,7 @@ workflow {
 
             EXTERNAL_LD_ATAC_MERGE_eigenMT(chrom_list_ch.max(), EXTERNAL_LD_ATAC_eigenMT.out.collect())
 
-            EXTERNAL_LD_ATAC_MERGE_rasqual_normial(EXTERNAL_LD_ATAC_eigenMT_process_input.out.collect())
+            EXTERNAL_LD_ATAC_MERGE_rasqual_normial(ATAC_rasqual_TO_eigenMT.out.collect())
 
             EXTERNAL_LD_ATAC_GET_lead_SNP(EXTERNAL_LD_ATAC_MERGE_eigenMT.out, EXTERNAL_LD_ATAC_MERGE_rasqual_normial.out)
 
@@ -167,7 +167,7 @@ workflow {
 
             EXTERNAL_LD_ATAC_MERGE_eigenMT_permute(chrom_list_ch.max(), EXTERNAL_LD_ATAC_eigenMT_permute.out.collect())
 
-            EXTERNAL_LD_ATAC_MERGE_rasqual_normial_permute(EXTERNAL_LD_ATAC_eigenMT_permute.out.collect())
+            EXTERNAL_LD_ATAC_MERGE_rasqual_normial_permute(ATAC_rasqual_TO_eigenMT_permute.out.collect())
             EXTERNAL_LD_ATAC_GET_lead_SNP_permute(EXTERNAL_LD_ATAC_MERGE_eigenMT_permute.out, EXTERNAL_LD_ATAC_MERGE_rasqual_normial_permute.out)
 
         }else{
