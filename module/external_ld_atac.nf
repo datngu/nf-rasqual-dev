@@ -202,12 +202,12 @@ process EXTERNAL_LD_ATAC_MERGE_rasqual_normial {
     path all_inputs
 
     output:
-    path("obs_atac_rasqual_normial_pval.txt")
+    path("obs_rasqual_normial_pval.txt")
 
 
     script:
     """
-    cat *_formated_EigenMT.txt >> obs_atac_rasqual_normial_pval.txt
+    cat *_formated_EigenMT.txt >> obs_rasqual_normial_pval.txt
     """
 }
 
@@ -222,12 +222,12 @@ process EXTERNAL_LD_ATAC_MERGE_rasqual_normial_permute {
     path all_inputs
 
     output:
-    path("nul_atac_rasqual_normial_pval.txt")
+    path("nul_rasqual_normial_pval.txt")
 
 
     script:
     """
-    cat *_formated_EigenMT.txt >> nul_atac_rasqual_normial_pval.txt
+    cat *_formated_EigenMT.txt >> nul_rasqual_normial_pval.txt
     """
 }
 
@@ -243,12 +243,12 @@ process EXTERNAL_LD_ATAC_GET_lead_SNP {
     path normial_merged
 
     output:
-    path("obs_atac_rasqual_normial_pval_lead_snp.txt")
+    path("obs_rasqual_normial_pval_lead_snp.txt")
 
 
     script:
     """
-    extract_lead_SNPs_nomial_pval.py --normial $normial_merged --eigenMT $eigenMT_merged > obs_atac_rasqual_normial_pval_lead_snp.txt
+    extract_lead_SNPs_nomial_pval.py --normial $normial_merged --eigenMT $eigenMT_merged > obs_rasqual_normial_pval_lead_snp.txt
     """
 }
 
@@ -264,11 +264,11 @@ process EXTERNAL_LD_ATAC_GET_lead_SNP_permute {
     path normial_merged
 
     output:
-    path("nul_atac_rasqual_normial_pval_lead_snp.txt")
+    path("nul_rasqual_normial_pval_lead_snp.txt")
 
 
     script:
     """
-    extract_lead_SNPs_nomial_pval.py --normial $normial_merged --eigenMT $eigenMT_merged > nul_atac_rasqual_normial_pval_lead_snp.txt
+    extract_lead_SNPs_nomial_pval.py --normial $normial_merged --eigenMT $eigenMT_merged > nul_rasqual_normial_pval_lead_snp.txt
     """
 }
