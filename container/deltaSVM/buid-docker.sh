@@ -26,3 +26,5 @@ echo DONE
 ### test docker
 
 docker run -it --rm -v /sigma4:/sigma4 --name delta-svm ndatth/delta-svm:v0.0.0
+
+singularity build ndatth-delta-svm-v0.0.0.img docker://ndatth/delta-svm:v0.0.0
