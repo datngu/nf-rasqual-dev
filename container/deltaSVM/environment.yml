@@ -10,4 +10,5 @@ dependencies:
   - bioconda::ls-gkm=0.0.1
   - bioconda::bioconductor-bsgenome.hsapiens.ucsc.hg19.masked
   - bioconda::trf=4.09.1
+  - bioconda::pysam
   - argparse
